@@ -87,6 +87,14 @@ Output contains:
     -   the points, corresponding to the observed performance (example: `M2_overall_mse_points.csv`)
     -   a smoothing LOESS curve for better visualisation in the plots (example: `M2_overall_mse_loess.csv`) LOESS-smoothed performance curves are computed for visualization.
 
+## Secondary analysis
+
+The aim of the secondary analysis is to discuss the importance of subsetting the training dataset by excluding observations with missing outcome when the mechanism is MNAR, MARX-YO. Using the datasets generated for scenario 5:
+
+- missingness in $Y$ is introduced completely at random (from bot $X_1$, $X_2$, $Y$ and $M_{X_1}$)
+- MLE and MI methods are fitted on both the complete training set (with missing $Y$) and the subset with only observed $Y$
+- their performances are compared with the MU and MC references
+
 ## Code structure
 
 ```         
