@@ -5,7 +5,7 @@ author:
   - name: Cécile Proust-Lima
   - name: Robin Genuer
 date: 2026-02-07
-repository: https://github.com/YOUR_USERNAME/missingness-in-prediction
+repository: https://github.com/pierre-catoire/missingness-in-prediction
 license: MIT
 ---
 
