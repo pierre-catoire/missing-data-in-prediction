@@ -17,6 +17,8 @@ devtools::load_all()
 
 ## Overview of the simulation design
 
+The main analysis is run in `main.R` script.
+
 Each simulation run proceeds as follows:
 
 1.  Data generation
@@ -64,6 +66,7 @@ Performance of optimal prediction functions is represented to illustrate best ac
 
 > [!NOTE]
 > As it requires Monte Carlo approximation, computation of optimal predictors (MU, MC, OMU, OMC) are computationally heavy, despite parallelisation. If slow, consider reduce the `monte_carlo_size` parameter in `config.R`.
+> As an alternative, consider reducing the number of simulated datasets with the `missingness_proportion_MX1_step` parameter in `config.R`.
 
 6.  Performance evaluation
 

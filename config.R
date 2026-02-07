@@ -84,7 +84,12 @@ phi = list("M1" = list("beta" = c("(Intercept)" = 0,
 ## 3. Missingness proportions
 ## =============================================================================
 
-missingness_grid = seq(0, 0.7, by = 0.01)
+missingness_proportion_MX1_min  = 0
+missingness_proportion_MX1_max  = 0.7
+missingness_proportion_MX1_step = 0.001
+missingness_grid = seq(missingness_proportion_MX1_min,
+                       missingness_proportion_MX1_max,
+                       by = missingness_proportion_MX1_step)
 
 ## =============================================================================
 ## 4. Training procedures
