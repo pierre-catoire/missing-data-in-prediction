@@ -1,4 +1,4 @@
-# Prediction under missing covariates: simulation code
+# Prediction with missing information: simulation code
 *Authors: Pierre Catoire, Cécile Proust-Lima, Robin Genuer*
 *date: 2026-02-07*
 *version: 1.0*
