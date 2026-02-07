@@ -1,0 +1,14 @@
+Package: SimulationsForMissingnessInPrediction
+Type: Package
+Title: Simulation code for evaluating prediction methods under various missingness mechanisms
+Version: 1.0
+Authors@R: c(
+    person("Pierre", "Catoire", role = c("aut", "cre")),
+    person("Cécile", "Proust-Lima", role = "aut"),
+    person("Robin", "Genuer", role = "aut")
+  )
+Description: Internal code and documentation for a simulation study.
+License: MIT
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.3

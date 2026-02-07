@@ -1,0 +1,13 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+sandbox/
+output/
+renv/
+NAMESPACE
+renv.lock
+.Rbuildignore
+.Rprofile
+.DS_Store
+Thumbs.db
