@@ -1,19 +1,14 @@
----
-title: "Prediction under missing covariates: simulation code"
-author:
-  - name: Pierre Catoire
-  - name: Cécile Proust-Lima
-  - name: Robin Genuer
-date: 2026-02-07
-repository: https://github.com/pierre-catoire/missingness-in-prediction
-license: MIT
----
+# Prediction under missing covariates: simulation code
+*Authors: Pierre Catoire, Cécile Proust-Lima, Robin Genuer*
+*date: 2026-02-07*
+*version: 1.0*
 
 This repository contains the complete simulation code used in the study “Prediction with missing information”.
 
 The objective of the simulation study is to compare predictive performance of several estimation strategies under different missing data mechanisms, including mechanisms that violate classical Missing At Random (MAR) assumptions.
 
-> [!IMPORTANT] Documentation is available for all implemented functions, using `?function`. To enable it, install `devtools` package if not done and run:
+> [!IMPORTANT]
+> Documentation is available for all implemented functions, using `?function`. To enable it, install `devtools` package if not done and run:
 
 ``` r
 devtools::load_all()
@@ -71,7 +66,7 @@ Performance of optimal prediction functions is represented to illustrate best ac
 > [!NOTE]
 > As it requires Monte Carlo approximation, computation of optimal predictors (MU, MC, OMU, OMC) are computationally heavy, despite parallelisation. If slow, consider reduce the `monte_carlo_size` parameter in `config.R`.
 > As an alternative, consider reducing the number of simulated datasets with the `missingness_proportion_MX1_step` parameter in `config.R`.
-# 
+
 6.  Performance evaluation
 
 Metrics of performance are:
