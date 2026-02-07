@@ -4,7 +4,7 @@
 \alias{loess_smooth_series}
 \title{Smooth a performance series using LOESS}
 \usage{
-loess_smooth_series(x, y, xloess, span = 0.75, trim = c(0.02, 0.98))
+loess_smooth_series(x, y, xloess, span = 1, trim = c(0.02, 0.98))
 }
 \arguments{
 \item{x}{Numeric vector. Covariate values (e.g. observed missingness

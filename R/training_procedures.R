@@ -368,7 +368,6 @@ train_mle_mi = function(dataset) {
     result[["no_missingness_flag"]] = FALSE
     return(result)
   }
-  #TODO: see if we can use train_mle and add an option "missingness indicators = T"
 }
 
 #' Predict outcomes from a Gaussian MLE model with missingness indicators
@@ -493,7 +492,6 @@ train_mi = function(dataset, m = 5, method = "norm") {
                                          data = complete(imp,impSet))
   }
   return(result)
-  #TODO: see if interaction terms may be relevant
 }
 
 #' Predict outcomes using multiple imputation models
@@ -603,7 +601,6 @@ train_mimi = function(dataset, m = 5, method = "norm") {
                                                  data = complete(imp,impSet))
     result[["predModel"]][[impSet]] = lm(formula("Y ~ X1+X2+MX1"),
                                          data = complete(imp,impSet))
-    #TODO: check if interaction terms are useful
   }
   return(result)
 }

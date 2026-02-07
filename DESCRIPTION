@@ -1,6 +1,6 @@
 Package: SimulationsForMissingnessInPrediction
 Type: Package
-Title: Simulation code for evaluating prediction methods under various missingness mechanisms
+Title: Simulation code for evaluating prediction methods in presence of missing data under various mechanisms
 Version: 1.0
 Authors@R: c(
     person("Pierre", "Catoire", role = c("aut", "cre")),

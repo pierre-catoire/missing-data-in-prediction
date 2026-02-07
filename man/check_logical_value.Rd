@@ -4,7 +4,7 @@
 \alias{check_logical_value}
 \title{Check that an object is a logical scalar}
 \usage{
-check_logical_value(x, name, allow_na = FALSE)
+check_logical_value(x, name)
 }
 \arguments{
 \item{x}{Object to be checked.}

@@ -48,37 +48,30 @@ missingness_scenarios = c("M1", # MX1 ~ 1
 ## Notes:
 ##   - the null coefficients in the beta vector of phi ensure that the
 ##     missingness mechanism is respeected
-##   - the intercept is adjusted by the function XXXTODO to ensure that
-##     the expected value of MX1 is approximately equal to the missingness
-##     proportion target
-
-#TODO : check if label is useful
+##   - the intercept is adjusted by the function tune_missingness_intercept() 
+##     to ensure that the expected value of MX1 is approximately equal to the
+##     missingness proportion target
 
 phi = list("M1" = list("beta" = c("(Intercept)" = 0,
                                   "X1" = 0,
                                   "X2" = 0,
-                                  "Y" = 0),
-                       "label" = "Scenario 1"),
+                                  "Y" = 0)),
            "M2" = list("beta" = c("(Intercept)" = 0,
                                   "X1" = 0,
                                   "X2" = -1,
-                                  "Y" = 0),
-                       "label" = "Scenario 2"),
+                                  "Y" = 0)),
            "M3" = list("beta" = c("(Intercept)" = 0,
                                   "X1" = -2,
                                   "X2" = 0,
-                                  "Y" = 0),
-                       "label" = "Scenario 3"),
+                                  "Y" = 0)),
            "M4" = list("beta" = c("(Intercept)" = 0,
                                   "X1" = 2,
                                   "X2" = 0,
-                                  "Y" = 2),
-                       "label" = "Scenario 4"),
+                                  "Y" = 2)),
            "M5" = list("beta" = c("(Intercept)" = 0,
                                   "X1" = 0,
                                   "X2" = 0,
-                                  "Y" = 1),
-                       "label" = "Scenario 5"))
+                                  "Y" = 1)))
 
 ## =============================================================================
 ## 3. Missingness proportions
@@ -86,36 +79,24 @@ phi = list("M1" = list("beta" = c("(Intercept)" = 0,
 
 missingness_proportion_MX1_min  = 0
 missingness_proportion_MX1_max  = 0.7
-missingness_proportion_MX1_step = 0.001
+missingness_proportion_MX1_step = 0.01
 missingness_grid = seq(missingness_proportion_MX1_min,
                        missingness_proportion_MX1_max,
                        by = missingness_proportion_MX1_step)
+
+missingness_target_Y = 0.4 # For secondary analysis
 
 ## =============================================================================
 ## 4. Training procedures
 ## =============================================================================
 
-#TODO: check if label is useful
-
 training_procedures = list(
-  "ps" = list(
-    "label" = "Pattern Submodels",
-    "procedure" = train_ps),
-  "ccs" = list(
-    "label" = "Complete Cases Submodels",
-    "procedure" = train_ccs), 
-  "mle" = list(
-    "label" = "ML estimation with marginalisation",
-    "procedure" = train_mle),
-  "mle_mi" = list(
-    "label" = "ML estimation with marginalisation and missingness indicators",
-    "procedure" = train_mle_mi),
-  "mi" = list(
-    "label" = "Multiple Imputation",
-    "procedure" = train_mi),
-  "mimi" = list(
-    "label" = "Multiple Imputation with missingness indicators",
-    "procedure" = train_mimi)
+  "ps" = list("procedure" = train_ps),
+  "ccs" = list("procedure" = train_ccs), 
+  "mle" = list("procedure" = train_mle),
+  "mle_mi" = list("procedure" = train_mle_mi),
+  "mi" = list("procedure" = train_mi),
+  "mimi" = list("procedure" = train_mimi)
 )
 
 ## =============================================================================
@@ -135,3 +116,9 @@ performance_metrics = c("mse","msep_omu","msep_omc")
 ## =============================================================================
 
 analysis_groups = c("overall","complete","incomplete")
+
+## =============================================================================
+## 7. LOESS parameters
+## =============================================================================
+
+loess_span = 1

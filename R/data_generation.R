@@ -90,8 +90,6 @@ simulate_data = function (train_size,
     Y  = drop(base::cbind(1,X1,X2) %*% theta[["Y"]][["beta"]]) + 
       rnorm(train_size,0,theta[["Y"]][["sigma"]])
     
-    #TODO: tune the missingness proportion
-    
     # Generate missingness indicators
     eta_MX1 = (1+exp(-base::cbind(1,X1,X2,Y) %*% beta_phi))^-1
     MX1 = ifelse(runif(size[[set]]) > eta_MX1, 0, 1)

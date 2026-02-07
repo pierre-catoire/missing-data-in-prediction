@@ -8,7 +8,7 @@ write_results_tables(
   tables,
   scenario,
   out_dir,
-  loess_span = 0.75,
+  loess_span = 1,
   loess_trim = c(0.02, 0.98),
   n_loess = 200
 )

@@ -155,7 +155,7 @@ evaluate_performance = function(simulation_object) {
 loess_smooth_series = function(x,
                                y,
                                xloess,
-                               span = 0.75,
+                               span = 1,
                                trim = c(0.02, 0.98)) {
   
   ## Remove NA
@@ -225,7 +225,7 @@ loess_smooth_series = function(x,
 write_results_tables = function(tables,
                                 scenario,
                                 out_dir,
-                                loess_span = 0.75,
+                                loess_span = 1,
                                 loess_trim = c(0.02, 0.98),
                                 n_loess = 200) {
   

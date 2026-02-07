@@ -23,8 +23,9 @@ source("config.R")
 
 ## 5. Output directories
 dir.create("output", showWarnings = FALSE)
-dir.create("output/raw", showWarnings = FALSE)
-dir.create("output/tables", showWarnings = FALSE)
+dir.create("output/main", showWarnings = FALSE)
+dir.create("output/main/raw", showWarnings = FALSE)
+dir.create("output/main/tables", showWarnings = FALSE)
 
 ## =============================================================================
 ## Main loop over missingness scenarios 1 to 5
@@ -62,7 +63,7 @@ for (scenario in missingness_scenarios) {
                               theta = theta,
                               beta_phi = beta_phi,
                               missingness_target_X1 = missingness_target_X1,
-                              missingness_target_Y = 0)
+                              missingness_target_Y = missingness_target_Y)
     
     # generate missing values in X1 and X2
     data_train = mask_data(data_full[["train"]], mask_Y = FALSE)
@@ -118,7 +119,7 @@ for (scenario in missingness_scenarios) {
     )
     
     # Archive raw simulation object
-    raw_dir = file.path("output/raw",
+    raw_dir = file.path("output/main/raw",
                         scenario,
                         sprintf("missingness_target_X1_%0.2f",
                                 missingness_target_X1))
@@ -165,7 +166,8 @@ for (scenario in missingness_scenarios) {
   write_results_tables(
     tables = scenario_tables,
     scenario = scenario,
-    out_dir = "output/tables"
+    out_dir = "output/main/tables",
+    loess_span = loess_span
   )
 }
 
