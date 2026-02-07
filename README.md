@@ -1,14 +1,12 @@
 # Prediction with missing information: simulation code
-*Authors: Pierre Catoire, Cécile Proust-Lima, Robin Genuer*
-*date: 2026-02-07*
-*version: 1.0*
+
+*Authors: Pierre Catoire, Cécile Proust-Lima, Robin Genuer* *date: 2026-02-07* *version: 1.0*
 
 This repository contains the complete simulation code used in the study “Prediction with missing information”.
 
 The objective of the simulation study is to compare predictive performance of several estimation strategies under different missing data mechanisms, including mechanisms that violate classical Missing At Random (MAR) assumptions.
 
-> [!IMPORTANT]
-> Documentation is available for all implemented functions, using `?function`. To enable it, install `devtools` package if not done and run:
+> [!IMPORTANT] Documentation is available for all implemented functions, using `?function`. To enable it, install `devtools` package if not done and run:
 
 ``` r
 devtools::load_all()
@@ -63,9 +61,7 @@ Performance of optimal prediction functions is represented to illustrate best ac
 -   MU reference: $\Pr(Y \mid X_o)$
 -   MC reference: $\Pr(Y \mid X_o, M_X)$
 
-> [!NOTE]
-> As it requires Monte Carlo approximation, computation of optimal predictors (MU, MC, OMU, OMC) are computationally heavy, despite parallelisation. If slow, consider reduce the `monte_carlo_size` parameter in `config.R`.
-> As an alternative, consider reducing the number of simulated datasets with the `missingness_proportion_MX1_step` parameter in `config.R`.
+> [!NOTE] As it requires Monte Carlo approximation, computation of optimal predictors (MU, MC, OMU, OMC) are computationally heavy, despite parallelisation. If slow, consider reduce the `monte_carlo_size` parameter in `config.R`. As an alternative, consider reducing the number of simulated datasets with the `missingness_proportion_MX1_step` parameter in `config.R`.
 
 6.  Performance evaluation
 
@@ -91,9 +87,9 @@ Output contains:
 
 The aim of the secondary analysis is to discuss the importance of subsetting the training dataset by excluding observations with missing outcome when the mechanism is MNAR, MARX-YO. Using the datasets generated for scenario 5:
 
-- missingness in $Y$ is introduced completely at random (from bot $X_1$, $X_2$, $Y$ and $M_{X_1}$)
-- MLE and MI methods are fitted on both the complete training set (with missing $Y$) and the subset with only observed $Y$
-- their performances are compared with the MU and MC references
+-   missingness in $Y$ is introduced completely at random (from bot $X_1$, $X_2$, $Y$ and $M_{X_1}$), with a probability of 40%
+-   MLE and MI methods are fitted on both the complete training set (with missing $Y$) and the subset with only observed $Y$
+-   their performances are compared with the MU and MC references
 
 ## Code structure
 
