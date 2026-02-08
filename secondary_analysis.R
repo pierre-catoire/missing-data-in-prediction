@@ -90,19 +90,19 @@ for (sim_file in sim_files) {
   
   secondary_raw_dir = file.path("output/secondary/raw",
                       scenario,
-                      sprintf("missingness_target_X1_%0.2f",
+                      sprintf("missingness_target_X1_%0.3f",
                               missingness_target_X1))
   dir.create(secondary_raw_dir, recursive = TRUE, showWarnings = FALSE)
   
   saveRDS(simulation_object,
           file = file.path(secondary_raw_dir,
-                           sprintf("simulation_%s_%0.2f.rds",
+                           sprintf("simulation_%s_%0.3f.rds",
                                    scenario,
                                    missingness_target_X1)))
   
   perf = evaluate_performance(simulation_object)
   
-  key = sprintf("%.4f", missingness_target_X1)
+  key = sprintf("%.3f", missingness_target_X1)
   
   for (group in names(perf)) {
     for (metric in names(perf[[group]])) {
@@ -124,4 +124,9 @@ write_results_tables(
   scenario = scenario,
   out_dir = "output/secondary/tables",
   loess_span = loess_span
+)
+
+capture.output(
+  sessionInfo(),
+  file = "output/secondary/sessionInfoSecondary.txt"
 )

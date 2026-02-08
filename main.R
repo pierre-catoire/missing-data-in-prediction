@@ -42,7 +42,7 @@ for (scenario in missingness_scenarios) {
   ## ---------------------------------------------------------------------------
   
   for (missingness_target_X1 in missingness_grid) {
-    message("Missingness target: ", missingness_target_X1)
+    message("Scenario :", scenario, ", Missingness target: ", missingness_target_X1)
     
     # Tune the intercept of the coefficients of phi
     beta_phi = phi[[scenario]][["beta"]]
@@ -121,12 +121,12 @@ for (scenario in missingness_scenarios) {
     # Archive raw simulation object
     raw_dir = file.path("output/main/raw",
                         scenario,
-                        sprintf("missingness_target_X1_%0.2f",
+                        sprintf("missingness_target_X1_%0.3f",
                                 missingness_target_X1))
     dir.create(raw_dir, recursive = TRUE, showWarnings = FALSE)
     saveRDS(simulation_object,
             file = file.path(raw_dir,
-                             sprintf("simulation_%s_%0.2f.rds",
+                             sprintf("simulation_%s_%0.3f.rds",
                                      scenario,
                                      missingness_target_X1)))
     
@@ -174,5 +174,5 @@ for (scenario in missingness_scenarios) {
 ## Session info
 capture.output(
   sessionInfo(),
-  file = "output/sessionInfo.txt"
+  file = "output/main/sessionInfoMain.txt"
 )
