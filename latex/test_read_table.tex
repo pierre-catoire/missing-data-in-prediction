@@ -1,0 +1,21 @@
+\documentclass{standalone}
+
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\pgfplotsset{compat=1.18}
+
+\begin{document}
+
+\pgfplotstableread[col sep=comma]{../output/main/tables/M3_complete_mse_points.csv}\datatable
+
+Column names detected by pgfplots:
+
+\pgfplotstabletypeset[
+  columns={},
+  every head row/.style={
+    before row=\hline,
+    after row=\hline
+  }
+]{\datatable}
+
+\end{document}
