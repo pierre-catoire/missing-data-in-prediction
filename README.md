@@ -72,7 +72,7 @@ Metrics of performance are:
 -   with Oracle MU reference (MSEP-OMU): $\frac{1}{n} \underset{i=1}{\overset{N}{\sum}} \left(\Pr(Y \mid X_o, X_m) - \hat{\mathbb{E}}\left[Y \mid \mathcal{E} \right]\right)^2$
 -   with Oracle MU reference (MSEP-OMC): $\frac{1}{n} \underset{i=1}{\overset{N}{\sum}} \left(\Pr(Y \mid X_o, X_m, M_X) - \hat{\mathbb{E}}\left[Y \mid \mathcal{E} \right]\right)^2$
 
-*With* $\mathcal{E}$ the evidence used by the prediction function: $X_o$ or \$X_o,M_X depending on the prediction function. See the article for details.
+*With* $\mathcal{E}$ the evidence used by the prediction function: $X_o$ or \$X_o,M_X$ depending on the prediction function. See the article for details.
 
 7.  Output
 
