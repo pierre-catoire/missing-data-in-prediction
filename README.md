@@ -6,7 +6,8 @@ This repository contains the complete simulation code used in the study “Predi
 
 The objective of the simulation study is to compare predictive performance of several estimation strategies under different missing data mechanisms, including mechanisms that violate classical Missing At Random (MAR) assumptions.
 
-> [!IMPORTANT] Documentation is available for all implemented functions, using `?function`. To enable it, install `devtools` package if not done and run:
+> [!IMPORTANT]
+> Documentation is available for all implemented functions, using `?function`. To enable it, install `devtools` package if not done and run:
 
 ``` r
 devtools::load_all()
@@ -61,7 +62,8 @@ Performance of optimal prediction functions is represented to illustrate best ac
 -   MU reference: $\Pr(Y \mid X_o)$
 -   MC reference: $\Pr(Y \mid X_o, M_X)$
 
-> [!NOTE] As it requires Monte Carlo approximation, computation of optimal predictors (MU, MC, OMU, OMC) are computationally heavy, despite parallelisation. If slow, consider reduce the `monte_carlo_size` parameter in `config.R`. As an alternative, consider reducing the number of simulated datasets with the `missingness_proportion_MX1_step` parameter in `config.R`.
+> [!NOTE]
+> As it requires Monte Carlo approximation, computation of optimal predictors (MU, MC, OMU, OMC) are computationally heavy, despite parallelisation. If slow, consider reduce the `monte_carlo_size` parameter in `config.R`. As an alternative, consider reducing the number of simulated datasets with the `missingness_proportion_MX1_step` parameter in `config.R`.
 
 6.  Performance evaluation
 
