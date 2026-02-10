@@ -24,7 +24,7 @@
 table[
   col sep=comma,
   ignore chars={"},
-  discard NA,
+  restrict y to domain=0:\YMAX,
   unbounded coords=discard,
   x=observedmissingness,
   y=ps
@@ -34,7 +34,7 @@ table[
 table[
   col sep=comma,
   ignore chars={"},
-  discard NA,
+  restrict y to domain=0:\YMAX,
   unbounded coords=discard,
   y=ps
 ]{\tabledir/\scenario_\grp_\metric_loess.csv};
@@ -44,7 +44,7 @@ table[
 table[
   col sep=comma,
   ignore chars={"},
-  discard NA,
+  restrict y to domain=0:\YMAX,
   unbounded coords=discard,
   x=observedmissingness,
   y=ccs
@@ -54,7 +54,7 @@ table[
 table[
   col sep=comma,
   ignore chars={"},
-  discard NA,
+  restrict y to domain=0:\YMAX,
   unbounded coords=discard,
   y=ccs
 ]{\tabledir/\scenario_\grp_\metric_loess.csv};
@@ -64,7 +64,7 @@ table[
 table[
   col sep=comma,
   ignore chars={"},
-  discard NA,
+  restrict y to domain=0:\YMAX,
   unbounded coords=discard,
   x=observedmissingness,
   y=mle
@@ -74,7 +74,7 @@ table[
 table[
   col sep=comma,
   ignore chars={"},
-  discard NA,
+  restrict y to domain=0:\YMAX,
   unbounded coords=discard,
   y=mle
 ]{\tabledir/\scenario_\grp_\metric_loess.csv};
@@ -84,7 +84,7 @@ table[
 table[
   col sep=comma,
   ignore chars={"},
-  discard NA,
+  restrict y to domain=0:\YMAX,
   unbounded coords=discard,
   x=observedmissingness,
   y=mlemi
@@ -94,7 +94,7 @@ table[
 table[
   col sep=comma,
   ignore chars={"},
-  discard NA,
+  restrict y to domain=0:\YMAX,
   unbounded coords=discard,
   y=mlemi
 ]{\tabledir/\scenario_\grp_\metric_loess.csv};
@@ -104,7 +104,7 @@ table[
 table[
   col sep=comma,
   ignore chars={"},
-  discard NA,
+  restrict y to domain=0:\YMAX,
   unbounded coords=discard,
   x=observedmissingness,
   y=mi
@@ -114,7 +114,7 @@ table[
 table[
   col sep=comma,
   ignore chars={"},
-  discard NA,
+  restrict y to domain=0:\YMAX,
   unbounded coords=discard,
   y=mi
 ]{\tabledir/\scenario_\grp_\metric_loess.csv};
@@ -124,7 +124,7 @@ table[
 table[
   col sep=comma,
   ignore chars={"},
-  discard NA,
+  restrict y to domain=0:\YMAX,
   unbounded coords=discard,
   x=observedmissingness,
   y=mimi
@@ -134,7 +134,7 @@ table[
 table[
   col sep=comma,
   ignore chars={"},
-  discard NA,
+  restrict y to domain=0:\YMAX,
   unbounded coords=discard,
   y=mimi
 ]{\tabledir/\scenario_\grp_\metric_loess.csv};
@@ -144,7 +144,7 @@ table[
 table[
   col sep=comma,
   ignore chars={"},
-  discard NA,
+  restrict y to domain=0:\YMAX,
   unbounded coords=discard,
   y=refMU
 ]{\tabledir/\scenario_\grp_\metric_loess.csv};
@@ -154,7 +154,7 @@ table[
 table[
   col sep=comma,
   ignore chars={"},
-  discard NA,
+  restrict y to domain=0:\YMAX,
   unbounded coords=discard,
   y=refMC
 ]{\tabledir/\scenario_\grp_\metric_loess.csv};
