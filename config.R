@@ -121,4 +121,4 @@ analysis_groups = c("overall","complete","incomplete")
 ## 7. LOESS parameters
 ## =============================================================================
 
-loess_span = 1
+loess_span = .5

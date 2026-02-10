@@ -156,7 +156,8 @@ loess_smooth_series = function(x,
                                y,
                                xloess,
                                span = 1,
-                               trim = c(0.02, 0.98)) {
+                               trim = c(0.02,0.98)
+                               ) {
   
   ## Remove NA
   ok = !is.na(x) & !is.na(y)
@@ -174,7 +175,7 @@ loess_smooth_series = function(x,
   fit = loess(
     y ~ x,
     span = span,
-    degree = 1,
+    degree = 2,
     control = loess.control(surface = "direct")
   )
   
@@ -225,9 +226,9 @@ loess_smooth_series = function(x,
 write_results_tables = function(tables,
                                 scenario,
                                 out_dir,
-                                loess_span = 1,
+                                loess_span = .5,
                                 loess_trim = c(0.02, 0.98),
-                                n_loess = 200) {
+                                n_loess = 700) {
   
   check_character_value(scenario, "scenario")
   check_data_frame_path(out_dir)
