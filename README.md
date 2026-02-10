@@ -95,7 +95,7 @@ The aim of the secondary analysis is to discuss the importance of subsetting the
 
 ## Figures generation
 
-All figures used in the paper are generated automatically from the simulation output tables using LuaLaTeX and a Makefile.
+All figures used in the article are generated automatically from the simulation output tables using LuaLaTeX and a Makefile.
 
 LaTeX scripts for all figures reporting simulation results are available in `latex/figures/`:
 
@@ -147,7 +147,7 @@ make
 
 ### Notes
 
-- All figures are generated directly from the CSV files in output/main/tables/. Make sure they are generated (or output.zip is extracted in the root directory).
+- All figures are generated directly from the CSV files in `output/main/tables/` and `output/secondary/tables/`. Make sure they are generated (or output.zip is extracted in the root directory).
 - No manual editing of figures is required.
 - The figure generation process is fully reproducible and platform-independent.
 

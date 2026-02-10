@@ -62,17 +62,17 @@ for (sim_file in sim_files) {
   
   ## Train models
   models = list(
-    mle_all        = train_mle(data_train_all),
-    mle_observed_Y = train_mle(data_train_observed_Y),
-    mi_all         = train_mi(data_train_all),
-    mi_observed_Y  = train_mi(data_train_observed_Y)
+    mleall        = train_mle(data_train_all),
+    mleobservedY = train_mle(data_train_observed_Y),
+    miall         = train_mi(data_train_all),
+    miobservedY  = train_mi(data_train_observed_Y)
   )
   
   predictions = list(
-    mle_all        = predict_mle(models$mle_all, data_test),
-    mle_observed_Y = predict_mle(models$mle_observed_Y, data_test),
-    mi_all         = predict_mi(models$mi_all, data_test),
-    mi_observed_Y  = predict_mi(models$mi_observed_Y, data_test)
+    mleall        = predict_mle(models$mleall, data_test),
+    mleobservedY = predict_mle(models$mleobservedY, data_test),
+    miall         = predict_mi(models$miall, data_test),
+    miobservedY  = predict_mi(models$miobservedY, data_test)
   )
   
   reference_probabilities = list(refMU = sim$reference_probabilities$refMU,

@@ -1,0 +1,206 @@
+\documentclass[tikz,border=2mm]{standalone}
+
+% =================================================
+% Parameters (overridden externally)
+% =================================================
+
+\providecommand{\metric}{mse}
+\providecommand{\YLABEL}{}
+
+\def\YMIN{0.5}
+\def\YMAX{2}
+% =================================================
+% Packages
+% =================================================
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepgfplotslibrary{groupplots}
+\pgfplotsset{compat=1.18}
+\usepackage{xcolor}
+
+% =================================================
+% Paths
+% =================================================
+\def\tabledir{../../output/secondary/tables}
+
+% =================================================
+% Axis style (same spirit as main figures)
+% =================================================
+\pgfplotsset{
+  performanceaxis/.style={
+    width=7.5cm,
+    height=6cm,
+    axis lines=left,
+    axis line shift=4pt,
+    xmin=0,
+    xmax=0.7,
+    ymin=\YMIN,
+    ymax=\YMAX,
+    xlabel={Observed missingness proportion},
+    ylabel={\YLABEL},
+    tick label style={font=\small},
+    label style={font=\small},
+    title style={font=\small},
+    grid=none
+  }
+}
+
+% =================================================
+% Plot styles
+% =================================================
+\pgfplotsset{
+  every axis plot/.append style={line width=1.2pt},
+  points/.style={only marks, mark=*, mark size=0.55pt, opacity=0.15},
+  loess/.style={very thick}
+}
+
+% =================================================
+% Colors (secondary analysis)
+% =================================================
+
+% --- MLE family (blue tones)
+\definecolor{mleall}{RGB}{70,130,180}        % steel blue
+\definecolor{mleobservedY}{RGB}{30,90,150}   % darker blue
+
+% --- MI family (green tones)
+\definecolor{miall}{RGB}{60,179,113}         % medium sea green
+\definecolor{miobservedY}{RGB}{34,139,34}    % forest green
+
+% --- References
+\definecolor{refMU}{RGB}{0,0,139}             % dark blue
+\definecolor{refMC}{RGB}{139,0,0}             % dark red
+
+% =================================================
+% One subgroup plot (Scenario 5)
+% =================================================
+\newcommand{\secondarysubplot}[1]{%
+  % #1 = overall / complete / incomplete
+
+  % mleall
+  \addplot[mleall, points, forget plot]
+    table[col sep=comma, ignore chars={"},
+          x=observedmissingness, y=mleall]
+    {\tabledir/M5_#1_\metric_points.csv};
+  \addplot[mleall, loess]
+    table[col sep=comma, ignore chars={"},
+          y=mleall]
+    {\tabledir/M5_#1_\metric_loess.csv};
+
+  % mleobservedY
+  \addplot[mleobservedY, points, forget plot]
+    table[col sep=comma, ignore chars={"},
+          x=observedmissingness, y=mleobservedY]
+    {\tabledir/M5_#1_\metric_points.csv};
+  \addplot[mleobservedY, loess]
+    table[col sep=comma, ignore chars={"},
+          y=mleobservedY]
+    {\tabledir/M5_#1_\metric_loess.csv};
+
+  % miall
+  \addplot[miall, points, forget plot]
+    table[col sep=comma, ignore chars={"},
+          x=observedmissingness, y=miall]
+    {\tabledir/M5_#1_\metric_points.csv};
+  \addplot[miall, loess]
+    table[col sep=comma, ignore chars={"},
+          y=miall]
+    {\tabledir/M5_#1_\metric_loess.csv};
+
+  % miobservedY
+  \addplot[miobservedY, points, forget plot]
+    table[col sep=comma, ignore chars={"},
+          x=observedmissingness, y=miobservedY]
+    {\tabledir/M5_#1_\metric_points.csv};
+  \addplot[miobservedY, loess]
+    table[col sep=comma, ignore chars={"},
+          y=miobservedY]
+    {\tabledir/M5_#1_\metric_loess.csv};
+
+  % refMU
+  \addplot[refMU, loess, dashed]
+    table[col sep=comma, ignore chars={"},
+          y=refMU]
+    {\tabledir/M5_#1_\metric_loess.csv};
+
+  % refMC
+  \addplot[refMC, loess, dashed]
+    table[col sep=comma, ignore chars={"},
+          y=refMC]
+    {\tabledir/M5_#1_\metric_loess.csv};
+}
+
+% =================================================
+% Document
+% =================================================
+\begin{document}
+
+\begin{tikzpicture}
+
+\begin{groupplot}[
+  group style={
+    group size=2 by 2,
+    horizontal sep=2cm,
+    vertical sep=2cm
+  },
+  performanceaxis
+]
+
+% =================================================
+% Legend cell (top-left)
+% =================================================
+\nextgroupplot[
+  axis lines=none,
+  ticks=none,
+  xmin=0, xmax=1,
+  ymin=0, ymax=1,
+  legend to name=legendSecondary,
+  legend style={draw=none}
+]
+
+\addplot[mleall, loess] coordinates {(0,0)};
+\addlegendentry{MLE (all)}
+
+\addplot[mleobservedY, loess] coordinates {(0,0)};
+\addlegendentry{MLE (observed Y)}
+
+\addplot[miall, loess] coordinates {(0,0)};
+\addlegendentry{MI (all)}
+
+\addplot[miobservedY, loess] coordinates {(0,0)};
+\addlegendentry{MI (observed Y)}
+
+\addplot[refMU, loess, dashed] coordinates {(0,0)};
+\addlegendentry{Optimal MU}
+
+\addplot[refMC, loess, dashed] coordinates {(0,0)};
+\addlegendentry{Optimal MC}
+
+% =================================================
+% Overall
+% =================================================
+\nextgroupplot[title={Overall}, ymin=0, ymax=2]
+\secondarysubplot{overall}
+
+% =================================================
+% Complete
+% =================================================
+\nextgroupplot[title={Complete}, ymin=0, ymax=5]
+\secondarysubplot{complete}
+
+% =================================================
+% Incomplete
+% =================================================
+\nextgroupplot[title={Incomplete}, ymin=0, ymax=5]
+\secondarysubplot{incomplete}
+
+\end{groupplot}
+
+% Legend placement (centered in top-left cell)
+\node[anchor=center]
+  at ([xshift=3.75cm,yshift=-3cm]current bounding box.north west)
+  {\pgfplotslegendfromname{legendSecondary}};
+
+\end{tikzpicture}
+
+\end{document}
+
