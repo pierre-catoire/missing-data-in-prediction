@@ -153,7 +153,7 @@ make
 
 ## Code structure
 
-```         
+``` bash        
 ├── R/ # R scripts
 │   ├── data_generation.R # simulation of datasets
 │   ├── training_procedures.R # training procedures and prediction functions
