@@ -94,7 +94,7 @@ training_procedures = list(
   "ps" = list("procedure" = train_ps),
   "ccs" = list("procedure" = train_ccs), 
   "mle" = list("procedure" = train_mle),
-  "mle_mi" = list("procedure" = train_mle_mi),
+  "mlemi" = list("procedure" = train_mlemi),
   "mi" = list("procedure" = train_mi),
   "mimi" = list("procedure" = train_mimi)
 )
@@ -105,11 +105,11 @@ training_procedures = list(
 
 ## mse      : mean squared error
 ##          : = mean( (Y-Ypred)^2 )
-## msep_omu : mean squared error of prediction with Oracle MU reference
+## msepomu : mean squared error of prediction with Oracle MU reference
 ##            = mean( (P(Y|X1,X2)-Ypred)^2 )
-## msep_omc : mean squared error of prediction with Oracle MC reference
+## msepomc : mean squared error of prediction with Oracle MC reference
 ##            = mean( (P(Y|X1,X2,MX1)-Ypred)^2 )
-performance_metrics = c("mse","msep_omu","msep_omc")
+performance_metrics = c("mse","msepomu","msepomc")
 
 ## =============================================================================
 ## 6. Analysis groups

@@ -93,20 +93,83 @@ The aim of the secondary analysis is to discuss the importance of subsetting the
 -   MLE and MI methods are fitted on both the complete training set (with missing $Y$) and the subset with only observed $Y$
 -   their performances are compared with the MU and MC references
 
+## Figures generation
+
+All figures used in the paper are generated automatically from the simulation output tables using LuaLaTeX and a Makefile.
+
+LaTeX scripts for all figures reporting simulation results are available in `latex/figures/`:
+
+### Requirements
+
+- LuaLaTeX (TeX Live ≥ 2022 or MiKTeX)
+- GNU Make
+
+#### Linux
+
+- Both lualatex and make are usually available by default.
+
+#### MacOS
+
+- Install via Homebrew:
+
+``` bash
+brew install --cask mactex
+brew install make
+```
+
+#### Windows
+
+Windows
+
+- Two common options:
+
+  - Rtools (recommended for R users): https://cran.r-project.org/bin/windows/Rtools/
+  - MiKTeX + Make via:
+    - MSYS2, or
+    - Git Bash, or
+    - Windows Subsystem for Linux (WSL)
+
+- After installation, make sure both lualatex and make are available in your terminal.
+
+### Generating all figures
+
+- From the project root:
+
+``` bash
+cd latex/figures
+make
+```
+
+- This command:
+  - creates the `output/main/figures` directory if needed,
+  - compiles all figures using LuaLaTeX,
+  - writes the resulting PDFs to `output/main/figures/`
+
+### Notes
+
+- All figures are generated directly from the CSV files in output/main/tables/. Make sure they are generated (or output.zip is extracted in the root directory).
+- No manual editing of figures is required.
+- The figure generation process is fully reproducible and platform-independent.
+
 ## Code structure
 
 ```         
-├── R/
-│   ├── data_generation.R
-│   ├── training_procedures.R
-│   ├── performance_metrics.R
-│   ├── reference_probabilities.R
-│   ├── utils.R
-│   └── missingnessMechanismSimulations-package.R
-├── man/
-├── config.R
-├── main.R
-├── secondary_analysis.R
+├── R/ # R scripts
+│   ├── data_generation.R # simulation of datasets
+│   ├── training_procedures.R # training procedures and prediction functions
+│   ├── performance_metrics.R # measure of performance metrics and generation of tables
+│   ├── reference_probabilities.R # computation of reference probabilities
+│   ├── utils.R # checkers
+│   └── missingnessMechanismSimulations-package.R # pseudo-package description for documentation
+├── man/ # Functions documentation
+├── config.R # simulation parameters
+├── main.R # main analysis script
+├── secondary_analysis.R # secondary analysis scripts
+├── latex/
+│   └── figures/
+        ├── Makefile # automatically generate all figures with the make command
+        ├── figure_main.tex # builds the global group figures used in the article
+        └── figure_scenario_unique.tex # builds the individual plots 
 ├── DESCRIPTION
 ├── LICENSE
 └── README.md

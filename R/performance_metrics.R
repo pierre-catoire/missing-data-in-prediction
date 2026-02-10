@@ -59,9 +59,9 @@ compute_msd = function(reference, prediction) {
 #' metrics:
 #' \describe{
 #'   \item{mse}{Mean squared error with respect to the true outcome \code{Y}.}
-#'   \item{msep_omu}{Mean squared error of prediction with respect to the oracle
+#'   \item{msepomu}{Mean squared error of prediction with respect to the oracle
 #'     predictor ignoring missingness (\code{refOMU}).}
-#'   \item{msep_omc}{Mean squared error of prediction with respect to the oracle
+#'   \item{msepomc}{Mean squared error of prediction with respect to the oracle
 #'     predictor conditioning on missingness (\code{refOMC}).}
 #' }
 #'
@@ -114,13 +114,13 @@ evaluate_performance = function(simulation_object) {
       })
     
     ## MSEP wrt oracle ignoring MX1 (REFMU)
-    out[[g]][["msep_omu"]] =
+    out[[g]][["msepomu"]] =
       sapply(c(predictions,references), function(pred) {
         compute_msd(oracles$refOMU[idx], pred[idx])
       })
     
     ## MSEP wrt oracle conditioning on MX1 (REFMC)
-    out[[g]][["msep_omc"]] =
+    out[[g]][["msepomc"]] =
       sapply(c(predictions,references), function(pred) {
         compute_msd(oracles$refOMC[idx], pred[idx])
       })
@@ -243,13 +243,13 @@ write_results_tables = function(tables,
       df_perf = do.call(base::rbind, lapply(tbl, `[[`, "performance"))
       df_perf = as.data.frame(df_perf)
       
-      df_perf$observed_missingness =
+      df_perf$observedmissingness =
         sapply(tbl, `[[`, "observed_missingness")
       
-      df_perf$target_missingness =
+      df_perf$targetmissingness =
         as.numeric(names(tbl))
       
-      df_perf = df_perf[order(df_perf$observed_missingness), ]
+      df_perf = df_perf[order(df_perf$observedmissingness), ]
       
       raw_file = sprintf(
         "%s_%s_%s_points.csv",
@@ -259,7 +259,7 @@ write_results_tables = function(tables,
       )
       
       write.csv(
-        df_perf,
+        df_perf[complete.cases(df_perf),],
         file = file.path(out_dir, raw_file),
         row.names = FALSE
       )
@@ -267,7 +267,7 @@ write_results_tables = function(tables,
       ## ----------------------------------------------------------------------
       ## LOESS-smoothed table
       ## ----------------------------------------------------------------------
-      x = df_perf$observed_missingness
+      x = df_perf$observedmissingness
       
       ## Common prediction grid
       xloess = seq(
@@ -276,18 +276,18 @@ write_results_tables = function(tables,
         length.out = n_loess
       )
       
-      df_loess = data.frame(observed_missingness = xloess)
+      df_loess = data.frame(observedmissingness = xloess)
       
       method_names = setdiff(
         names(df_perf),
-        c("observed_missingness", "target_missingness")
+        c("observedmissingness", "targetmissingness")
       )
       
       for (m in method_names) {
         
         df_loess[[m]] =
           loess_smooth_series(
-            x = df_perf$observed_missingness,
+            x = df_perf$observedmissingness,
             y = df_perf[[m]],
             xloess = xloess,
             span = loess_span,
@@ -303,7 +303,7 @@ write_results_tables = function(tables,
       )
       
       write.csv(
-        df_loess,
+        df_loess[complete.cases(df_loess),],
         file = file.path(out_dir, loess_file),
         row.names = FALSE
       )

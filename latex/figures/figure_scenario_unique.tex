@@ -1,0 +1,160 @@
+% =================================================
+% One scenario body
+% Requires:
+%   \scenario  (e.g. M1, M2, ...)
+%   \tabledir, \grp, \metric defined upstream
+% =================================================
+
+% --- Filter NA values safely ---
+\pgfplotsset{
+  discard NA/.style={
+    y filter/.code={
+      \edef\temp{\pgfmathresult}
+      \edef\NAstring{NA}
+      \ifx\temp\NAstring
+        \def\pgfmathresult{}
+      \fi
+    }
+  },
+  filter discard warning=false
+}
+
+% ps
+\addplot[ps, points, forget plot]
+table[
+  col sep=comma,
+  ignore chars={"},
+  discard NA,
+  unbounded coords=discard,
+  x=observedmissingness,
+  y=ps
+]{\tabledir/\scenario_\grp_\metric_points.csv};
+
+\addplot[ps, loess]
+table[
+  col sep=comma,
+  ignore chars={"},
+  discard NA,
+  unbounded coords=discard,
+  y=ps
+]{\tabledir/\scenario_\grp_\metric_loess.csv};
+
+% ccs
+\addplot[ccs, points, forget plot]
+table[
+  col sep=comma,
+  ignore chars={"},
+  discard NA,
+  unbounded coords=discard,
+  x=observedmissingness,
+  y=ccs
+]{\tabledir/\scenario_\grp_\metric_points.csv};
+
+\addplot[ccs, loess]
+table[
+  col sep=comma,
+  ignore chars={"},
+  discard NA,
+  unbounded coords=discard,
+  y=ccs
+]{\tabledir/\scenario_\grp_\metric_loess.csv};
+
+% mle
+\addplot[mle, points, forget plot]
+table[
+  col sep=comma,
+  ignore chars={"},
+  discard NA,
+  unbounded coords=discard,
+  x=observedmissingness,
+  y=mle
+]{\tabledir/\scenario_\grp_\metric_points.csv};
+
+\addplot[mle, loess]
+table[
+  col sep=comma,
+  ignore chars={"},
+  discard NA,
+  unbounded coords=discard,
+  y=mle
+]{\tabledir/\scenario_\grp_\metric_loess.csv};
+
+% mlemi
+\addplot[mlemi, points, forget plot]
+table[
+  col sep=comma,
+  ignore chars={"},
+  discard NA,
+  unbounded coords=discard,
+  x=observedmissingness,
+  y=mlemi
+]{\tabledir/\scenario_\grp_\metric_points.csv};
+
+\addplot[mlemi, loess]
+table[
+  col sep=comma,
+  ignore chars={"},
+  discard NA,
+  unbounded coords=discard,
+  y=mlemi
+]{\tabledir/\scenario_\grp_\metric_loess.csv};
+
+% mi
+\addplot[mi, points, forget plot]
+table[
+  col sep=comma,
+  ignore chars={"},
+  discard NA,
+  unbounded coords=discard,
+  x=observedmissingness,
+  y=mi
+]{\tabledir/\scenario_\grp_\metric_points.csv};
+
+\addplot[mi, loess]
+table[
+  col sep=comma,
+  ignore chars={"},
+  discard NA,
+  unbounded coords=discard,
+  y=mi
+]{\tabledir/\scenario_\grp_\metric_loess.csv};
+
+% mimi
+\addplot[mimi, points, forget plot]
+table[
+  col sep=comma,
+  ignore chars={"},
+  discard NA,
+  unbounded coords=discard,
+  x=observedmissingness,
+  y=mimi
+]{\tabledir/\scenario_\grp_\metric_points.csv};
+
+\addplot[mimi, loess]
+table[
+  col sep=comma,
+  ignore chars={"},
+  discard NA,
+  unbounded coords=discard,
+  y=mimi
+]{\tabledir/\scenario_\grp_\metric_loess.csv};
+
+% refMU
+\addplot[refMU, loess, dashed]
+table[
+  col sep=comma,
+  ignore chars={"},
+  discard NA,
+  unbounded coords=discard,
+  y=refMU
+]{\tabledir/\scenario_\grp_\metric_loess.csv};
+
+% refMC
+\addplot[refMC, loess, dashed]
+table[
+  col sep=comma,
+  ignore chars={"},
+  discard NA,
+  unbounded coords=discard,
+  y=refMC
+]{\tabledir/\scenario_\grp_\metric_loess.csv};

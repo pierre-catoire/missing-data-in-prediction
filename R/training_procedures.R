@@ -17,7 +17,7 @@
 #'   \item \code{"ccs"}: Complete Cases Submdodels
 #'   \item \code{"mle"}: Maximum Likelihood Estimation (using 
 #'   Expectation-Maximisation), with marginalisation of the missing predictors
-#'   \item \code{"mle_mi"}: Maximum Likelihood Estimation (using 
+#'   \item \code{"mlemi"}: Maximum Likelihood Estimation (using 
 #'   Expectation-Maximisation), with marginalisation of the missing predictors,
 #'   including missingness indicators
 #'   \code{mi}: Multiple imputation
@@ -46,7 +46,7 @@ predict_Y = function(object,
       newdata = newdata
     ),
     
-    "mle_mi" = predict_mle_mi(
+    "mlemi" = predict_mlemi(
       mle_parameters = prediction_function,
       newdata = newdata
     ),
@@ -344,7 +344,7 @@ predict_mle = function(mle_parameters, newdata){
 #' explicitly incorporates missingness indicators.
 #'
 #' @seealso \code{\link{train_mle}}
-train_mle_mi = function(dataset) {
+train_mlemi = function(dataset) {
   #Tests
   check_data_frame(dataset, "dataset")
   
@@ -376,7 +376,7 @@ train_mle_mi = function(dataset) {
 #' model fitted by maximum likelihood with missingness indicators included as
 #' additional variables.
 #'
-#' @param mle_parameters List. Output of \code{train_mle_mi()}, containing the
+#' @param mle_parameters List. Output of \code{train_mlemi()}, containing the
 #'   estimated mean vector \code{mu}, covariance matrix \code{sigma}, and the
 #'   logical flag \code{no_missingness_flag}.
 #' @param newdata Data frame containing variables \code{X1}, \code{X2}, and the
@@ -401,8 +401,8 @@ train_mle_mi = function(dataset) {
 #' The appropriate conditional expectation is applied observation-wise
 #' according to the observed missingness pattern.
 #'
-#' @seealso \code{\link{train_mle_mi}}, \code{\link{predict_mle}}
-predict_mle_mi = function(mle_parameters, newdata) {
+#' @seealso \code{\link{train_mlemi}}, \code{\link{predict_mle}}
+predict_mlemi = function(mle_parameters, newdata) {
   if(mle_parameters[["no_missingness_flag"]]){
     return(predict_mle(mle_parameters, newdata))
   }

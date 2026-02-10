@@ -1,0 +1,157 @@
+\documentclass[tikz,border=2mm]{standalone}
+
+% =========================
+% Parameters (overridden externally)
+% =========================
+\providecommand{\grp}{complete}
+\providecommand{\metric}{mse}
+\providecommand{\YMIN}{0}
+\providecommand{\YMAX}{2.5}
+\providecommand{\YLABEL}{Mean Squared Error}
+
+\usepackage{pgfplots}
+\usepgfplotslibrary{groupplots}
+\pgfplotsset{compat=1.18}
+
+\usepackage{xcolor}
+
+% =========================
+% Paths
+% =========================
+\def\tabledir{../../output/main/tables}
+
+% =========================
+% Axis style
+% =========================
+\pgfplotsset{
+  performanceaxis/.style={
+    width=8.2cm,
+    height=6.2cm,
+    axis lines=left,
+    axis line shift=4pt,
+    xmin=0,
+    xmax=0.7,
+    ymin=\YMIN,
+    ymax=\YMAX,
+    xlabel={Observed missingness proportion},
+    ylabel={\YLABEL},
+    tick label style={font=\small},
+    label style={font=\small},
+    title style={font=\small},
+    grid=none
+  }
+}
+
+% =========================
+% Plot styles
+% =========================
+\pgfplotsset{
+  every axis plot/.append style={line width=1.2pt},
+  points/.style={only marks, mark=*, mark size=0.55pt, opacity=0.1},
+  loess/.style={very thick}
+}
+
+% =========================
+% Color palette (semantic)
+% =========================
+
+% Greens
+\definecolor{ccs}{RGB}{60,179,113}
+
+% Blues
+\definecolor{mle}{RGB}{70,130,180}
+\definecolor{mi}{RGB}{100,149,237}
+
+% Reds
+\definecolor{ps}{RGB}{205,92,92}
+\definecolor{mlemi}{RGB}{178,34,34}
+\definecolor{mimi}{RGB}{233,150,122}
+
+% References
+\definecolor{refMU}{RGB}{0,0,139}
+\definecolor{refMC}{RGB}{139,0,0}
+
+\begin{document}
+
+\begin{tikzpicture}
+
+\begin{groupplot}[
+  group style={
+    group size=2 by 3,
+    horizontal sep=2cm,
+    vertical sep=2cm
+  },
+  performanceaxis
+]
+
+% =================================================
+% Legend cell (top-left)
+% =================================================
+\nextgroupplot[
+  axis lines=none,
+  ticks=none,
+  xmin=0, xmax=1,
+  ymin=0, ymax=1
+]
+
+% =================================================
+% Scenario 1 (legend defined here)
+% =================================================
+\nextgroupplot[
+  title={Scenario 1},
+  legend to name=legendMain,
+  legend style={draw=none}
+]
+
+\def\scenario{M1}
+\input{figure_scenario_unique.tex}
+
+\addlegendentry{Pattern Submodels}
+\addlegendentry{Complete Case Submodels}
+\addlegendentry{MLE with marginalisation}
+\addlegendentry{MLE with miss.\ ind.}
+\addlegendentry{Multiple Imputation}
+\addlegendentry{MI with miss.\ ind.}
+\addlegendentry{Optimal MU prediction}
+\addlegendentry{Optimal MC prediction}
+
+% =================================================
+% Scenario 2
+% =================================================
+\nextgroupplot[title={Scenario 2}]
+\def\scenario{M2}
+\input{figure_scenario_unique.tex}
+
+% =================================================
+% Scenario 3
+% =================================================
+\nextgroupplot[title={Scenario 3}]
+\def\scenario{M3}
+\input{figure_scenario_unique.tex}
+
+% =================================================
+% Scenario 4
+% =================================================
+\nextgroupplot[title={Scenario 4}]
+\def\scenario{M4}
+\input{figure_scenario_unique.tex}
+
+% =================================================
+% Scenario 5
+% =================================================
+\nextgroupplot[title={Scenario 5}]
+\def\scenario{M5}
+\input{figure_scenario_unique.tex}
+
+\end{groupplot}
+
+% =================================================
+% Legend placement
+% =================================================
+\node[anchor=center]
+  at ([xshift=4.5cm,yshift=-3.1cm]current bounding box.north west)
+  {\pgfplotslegendfromname{legendMain}};
+
+\end{tikzpicture}
+
+\end{document}

@@ -18,9 +18,9 @@ contains named numeric vectors of performance values for the following
 metrics:
 \describe{
   \item{mse}{Mean squared error with respect to the true outcome \code{Y}.}
-  \item{msep_omu}{Mean squared error of prediction with respect to the oracle
+  \item{msepomu}{Mean squared error of prediction with respect to the oracle
     predictor ignoring missingness (\code{refOMU}).}
-  \item{msep_omc}{Mean squared error of prediction with respect to the oracle
+  \item{msepomc}{Mean squared error of prediction with respect to the oracle
     predictor conditioning on missingness (\code{refOMC}).}
 }
 }

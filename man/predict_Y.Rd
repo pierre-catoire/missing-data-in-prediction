@@ -21,7 +21,7 @@ be used. Supported values include
 \item \code{"ccs"}: Complete Cases Submdodels
 \item \code{"mle"}: Maximum Likelihood Estimation (using 
 Expectation-Maximisation), with marginalisation of the missing predictors
-\item \code{"mle_mi"}: Maximum Likelihood Estimation (using 
+\item \code{"mlemi"}: Maximum Likelihood Estimation (using 
 Expectation-Maximisation), with marginalisation of the missing predictors,
 including missingness indicators
 \code{mi}: Multiple imputation

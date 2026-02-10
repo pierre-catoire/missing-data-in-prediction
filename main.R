@@ -4,7 +4,7 @@
 ################################################################################
 ## 1. Packages
 library(future.apply) # Parallel computation of reference probabilities
-library(norm)         # For MLE and MLE-MI procedures
+library(norm)         # For MLE and MLEMI procedures
 library(mice)         # For MI and MIMI procedures
 
 ## 2. Reproducibility
@@ -42,7 +42,7 @@ for (scenario in missingness_scenarios) {
   ## ---------------------------------------------------------------------------
   
   for (missingness_target_X1 in missingness_grid) {
-    message("Scenario :", scenario, ", Missingness target: ", missingness_target_X1)
+    message("Scenario: ", scenario, ", Missingness target: ", missingness_target_X1)
     
     # Tune the intercept of the coefficients of phi
     beta_phi = phi[[scenario]][["beta"]]
@@ -167,7 +167,7 @@ for (scenario in missingness_scenarios) {
     tables = scenario_tables,
     scenario = scenario,
     out_dir = "output/main/tables",
-    loess_span = loess_span
+    loess_span = loess_span #TODO: tune LOESS (does not fit low NA in the S3 and S4 overall)
   )
 }
 
