@@ -7,6 +7,7 @@ library(naniar) # Plotting distribution of missingness patterns
 library(table1) # Format descriptive tables
 library(mice) # Multiple imputation
 library(ggplot2) # Plotting
+library(knitr) # kable function
 
 ## 2. Reproducibility
 base_seed = 314159
