@@ -96,7 +96,6 @@ for (scenario in missingness_scenarios) {
                    reference_probabilities[["EY_X2"]])
     refOMU = reference_probabilities[["EY_X1X2"]]
     
-    #TODO: refMC seems off ...
     refMC = ifelse(idx0,
                    reference_probabilities[["EY_X1X2MX1"]],
                    reference_probabilities[["EY_X2MX1"]])
@@ -165,7 +164,7 @@ for (scenario in missingness_scenarios) {
     tables = scenario_tables,
     scenario = scenario,
     out_dir = "output/main/tables",
-    loess_span = loess_span #TODO: tune LOESS (does not fit low NA in the S3 and S4 overall)
+    loess_span = loess_span
   )
 }
 
