@@ -12,14 +12,14 @@ base_seed = 314159
 set.seed(base_seed)
 
 ## 3. Core functions
-source("R/data_generation.R")
-source("R/performance_metrics.R")
-source("R/reference_probabilities.R")
-source("R/training_procedures.R")
-source("R/utils.R")
+source("R/functions/data_generation.R")
+source("R/functions/performance_metrics.R")
+source("R/functions/reference_probabilities.R")
+source("R/functions/training_procedures.R")
+source("R/functions/utils.R")
 
 ## 4. Global configuration
-source("config.R")
+source("R/config/config.R")
 
 ## 5. Output directories
 dir.create("output", showWarnings = FALSE)
