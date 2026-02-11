@@ -23,10 +23,8 @@ source("R/functions/utils.R")
 source("R/config/config.R")
 
 ## 5. Output directories
-dir.create("output", showWarnings = FALSE)
-dir.create("output/secondary", showWarnings = FALSE)
-dir.create("output/secondary/raw", showWarnings = FALSE)
-dir.create("output/secondary/tables", showWarnings = FALSE)
+dir.create("output/secondary/raw", recursive = TRUE, showWarnings = FALSE)
+dir.create("output/secondary/tables", recursive = TRUE, showWarnings = FALSE)
 
 ## 6. Restrict to scenario 5
 scenario = "M5"

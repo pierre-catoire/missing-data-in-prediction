@@ -22,10 +22,8 @@ source("R/functions/utils.R")
 source("R/config/config.R")
 
 ## 5. Output directories
-dir.create("output", showWarnings = FALSE)
-dir.create("output/main", showWarnings = FALSE)
-dir.create("output/main/raw", showWarnings = FALSE)
-dir.create("output/main/tables", showWarnings = FALSE)
+dir.create("output/main/raw", recursive = TRUE, showWarnings = FALSE)
+dir.create("output/main/tables", recursive = TRUE, showWarnings = FALSE)
 
 ## =============================================================================
 ## Main loop over missingness scenarios 1 to 5
