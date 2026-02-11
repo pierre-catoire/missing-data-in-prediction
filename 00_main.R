@@ -7,3 +7,4 @@
 source("01_simulation_main_analysis.R")
 source("02_simulation_secondary_analysis.R")
 source("03_application.R")
+system("make -C latex/figures")
