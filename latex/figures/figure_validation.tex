@@ -1,0 +1,156 @@
+\documentclass[tikz,border=2mm]{standalone}
+
+% =================================================
+% PARAMETERS (change only these)
+% =================================================
+
+\def\OutcomeInclusion{outcomeExcluded}
+\def\MissIndInclusion{missIndsExcluded}
+\def\Procedure{mimi} % mi / mimi
+
+\def\YMIN{0}
+\def\YMAX{2.5}
+\def\YLABEL{Validation error}
+
+% =================================================
+% Packages
+% =================================================
+
+\usepackage{pgfplots}
+\usepgfplotslibrary{groupplots}
+\pgfplotsset{compat=1.18}
+\usepackage{xcolor}
+
+% =================================================
+% Table path
+% =================================================
+
+\def\tabledir{../../output/validation/tables}
+
+% =================================================
+% Conditional Color Palette (DEFINED ONCE HERE)
+% =================================================
+
+\def\miword{mi}
+
+\ifx\Procedure\miword
+
+  % --- MI palette (cool tones)
+  \definecolor{colorPred}{RGB}{40,100,200}
+  \definecolor{colorScore}{RGB}{0,150,130}
+  \definecolor{colorComp}{RGB}{0,110,70}
+
+\else
+
+  % --- MIMI palette (warm tones)
+  \definecolor{colorPred}{RGB}{230,160,0}
+  \definecolor{colorScore}{RGB}{255,120,0}
+  \definecolor{colorComp}{RGB}{200,40,40}
+
+\fi
+
+% =================================================
+% Axis style
+% =================================================
+
+\pgfplotsset{
+  performanceaxis/.style={
+    width=8cm,
+    height=6cm,
+    axis lines=left,
+    axis line shift=4pt,
+    xmin=0,
+    xmax=0.7,
+    ymin=\YMIN,
+    ymax=\YMAX,
+    xlabel={Observed missingness proportion},
+    ylabel={\YLABEL},
+    restrict y to domain=\YMIN:\YMAX,
+    tick label style={font=\small},
+    label style={font=\small},
+    title style={font=\small},
+    grid=none
+  }
+}
+
+% =================================================
+% Document
+% =================================================
+
+\begin{document}
+
+\begin{tikzpicture}
+
+\begin{groupplot}[
+  group style={
+    group size=2 by 3,
+    horizontal sep=2cm,
+    vertical sep=2cm
+  },
+  performanceaxis
+]
+
+% =================================================
+% Legend cell
+% =================================================
+
+\nextgroupplot[
+  axis lines=none,
+  ticks=none,
+  xmin=0, xmax=1,
+  ymin=0, ymax=1,
+  legend to name=legendValidation,
+  legend style={draw=none}
+]
+
+\addplot[colorPred, very thick] coordinates {(0,0)};
+\addlegendentry{Predictions}
+
+\addplot[colorScore, very thick] coordinates {(0,0)};
+\addlegendentry{Scores}
+
+\addplot[colorComp, very thick] coordinates {(0,0)};
+\addlegendentry{Complete}
+
+\addplot[colorPred, very thick, dashed] coordinates {(0,0)};
+\addlegendentry{Predictions (reference)}
+
+\addplot[colorScore, very thick, dashed] coordinates {(0,0)};
+\addlegendentry{Scores (reference)}
+
+\addplot[colorComp, very thick, dashed] coordinates {(0,0)};
+\addlegendentry{Complete (reference)}
+
+% =================================================
+% Scenarios
+% =================================================
+
+\nextgroupplot[title={Scenario 1}]
+\def\scenario{M1}
+\input{figure_scenario_validation.tex}
+
+\nextgroupplot[title={Scenario 2}]
+\def\scenario{M2}
+\input{figure_scenario_validation.tex}
+
+\nextgroupplot[title={Scenario 3}]
+\def\scenario{M3}
+\input{figure_scenario_validation.tex}
+
+\nextgroupplot[title={Scenario 4}]
+\def\scenario{M4}
+\input{figure_scenario_validation.tex}
+
+\nextgroupplot[title={Scenario 5}]
+\def\scenario{M5}
+\input{figure_scenario_validation.tex}
+
+\end{groupplot}
+
+\node[anchor=center]
+  at ([xshift=4cm,yshift=-3cm]current bounding box.north west)
+  {\pgfplotslegendfromname{legendValidation}};
+
+\end{tikzpicture}
+
+\end{document}

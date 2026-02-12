@@ -35,7 +35,8 @@ oracle_reference_one = function(X1,
                                 MX1,
                                 theta,
                                 beta_phi,
-                                B = 5000) {
+                                B = 5000,
+                                compute_observed = TRUE) {
   
   ## --------------------------------------------------------------------------
   ## 1. E(Y | X1, X2)
@@ -48,10 +49,12 @@ oracle_reference_one = function(X1,
   ## --------------------------------------------------------------------------
   ## 2. E(Y | X2)
   ## --------------------------------------------------------------------------
-  EY_X2 =
-    theta[["Y"]][["beta"]]["(Intercept)"] +
-    theta[["Y"]][["beta"]]["X1"] * theta[["X1"]][["beta"]] +
-    theta[["Y"]][["beta"]]["X2"] * X2
+  if (compute_observed) {
+    EY_X2 =
+      theta[["Y"]][["beta"]]["(Intercept)"] +
+      theta[["Y"]][["beta"]]["X1"] * theta[["X1"]][["beta"]] +
+      theta[["Y"]][["beta"]]["X2"] * X2
+  }
   
   ## --------------------------------------------------------------------------
   ## 3. E(Y | X1, X2, MX1)  (MC integration)
@@ -76,42 +79,46 @@ oracle_reference_one = function(X1,
   ## --------------------------------------------------------------------------
   ## 4. E(Y | X2, MX1)  (MC integration over X1 and Y)
   ## --------------------------------------------------------------------------
-  X1_draws =
-    rnorm(B, mean = theta[["X1"]][["beta"]], sd = theta[["X1"]][["sigma"]])
-  
-  Y_draws2 =
-    rnorm(
-      B,
-      mean =
-        theta[["Y"]][["beta"]]["(Intercept)"] +
-        theta[["Y"]][["beta"]]["X1"] * X1_draws +
-        theta[["Y"]][["beta"]]["X2"] * X2,
-      sd = theta[["Y"]][["sigma"]]
-    )
-  
-  linpred2 =
-    beta_phi["(Intercept)"] +
-    beta_phi["X1"] * X1_draws +
-    beta_phi["X2"] * X2 +
-    beta_phi["Y"]  * Y_draws2
-  
-  p_MX1_2 = plogis(linpred2)
-  
-  weights2 =
-    if (MX1 == 1) p_MX1_2 else (1 - p_MX1_2)
-  
-  EY_X2_MX1 =
-    sum(Y_draws2 * weights2) / sum(weights2)
+  if (compute_observed) {
+    X1_draws =
+      rnorm(B, mean = theta[["X1"]][["beta"]], sd = theta[["X1"]][["sigma"]])
+    
+    Y_draws2 =
+      rnorm(
+        B,
+        mean =
+          theta[["Y"]][["beta"]]["(Intercept)"] +
+          theta[["Y"]][["beta"]]["X1"] * X1_draws +
+          theta[["Y"]][["beta"]]["X2"] * X2,
+        sd = theta[["Y"]][["sigma"]]
+      )
+    
+    linpred2 =
+      beta_phi["(Intercept)"] +
+      beta_phi["X1"] * X1_draws +
+      beta_phi["X2"] * X2 +
+      beta_phi["Y"]  * Y_draws2
+    
+    p_MX1_2 = plogis(linpred2)
+    
+    weights2 =
+      if (MX1 == 1) p_MX1_2 else (1 - p_MX1_2)
+    
+    EY_X2_MX1 =
+      sum(Y_draws2 * weights2) / sum(weights2)
+  }
   
   ## --------------------------------------------------------------------------
   ## Return
   ## --------------------------------------------------------------------------
-  c(
-    EY_X1X2     = EY_X1X2,
-    EY_X2       = EY_X2,
-    EY_X1X2_MX1 = EY_X1X2_MX1,
-    EY_X2_MX1   = EY_X2_MX1
-  )
+  result = list("EY_X1X2"     = EY_X1X2,
+                "EY_X1X2_MX1" = EY_X1X2_MX1)
+  
+  if (compute_observed) {
+    result[["EY_X2"]] = EY_X2
+    result[["EY_X2_MX1"]] = EY_X2_MX1
+  }
+  return(result)
 }
 
 #' Compute oracle reference probabilities for a dataset
@@ -155,7 +162,8 @@ compute_reference_probabilities = function(dataset,
                                            theta,
                                            beta_phi,
                                            B = 5000,
-                                           parallel = TRUE) {
+                                           parallel = TRUE,
+                                           compute_observed = TRUE) {
   
   ## Tests
   check_data_frame(dataset, "dataset")
@@ -187,7 +195,8 @@ compute_reference_probabilities = function(dataset,
           MX1        = dataset[["MX1"]][i],
           theta      = theta,
           beta_phi   = beta_phi,
-          B          = B
+          B          = B,
+          compute_observed = compute_observed
         )
       },
       future.seed = TRUE
@@ -198,10 +207,17 @@ compute_reference_probabilities = function(dataset,
     as.data.frame(do.call(base::rbind, res))
   
   rownames(reference_probabilities) = NULL
-  colnames(reference_probabilities) = c("EY_X1X2",
-                                        "EY_X2",
-                                        "EY_X1X2MX1",
-                                        "EY_X2MX1")
+  
+  if (compute_observed) {
+    column_names = c("EY_X1X2",
+                     "EY_X2",
+                     "EY_X1X2MX1",
+                     "EY_X2MX1")
+  } else {
+    column_names = c("EY_X1X2",
+                     "EY_X1X2MX1")
+  }
+  colnames(reference_probabilities) = column_names
   
   return(reference_probabilities)
 }

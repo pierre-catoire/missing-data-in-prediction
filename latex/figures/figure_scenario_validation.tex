@@ -1,0 +1,69 @@
+% =================================================
+% One validation scenario body
+% Requires:
+%   \scenario
+%   \OutcomeInclusion
+%   \MissIndInclusion
+%   \Procedure
+%   \tabledir
+%   colorPred, colorScore, colorComp defined upstream
+% =================================================
+
+\edef\pointsfile{\tabledir/\scenario_\OutcomeInclusion_\MissIndInclusion_\Procedure_points.csv}
+\edef\loessfile{\tabledir/\scenario_\OutcomeInclusion_\MissIndInclusion_\Procedure_loess.csv}
+
+% =================================================
+% Main methods (dots + solid loess)
+% =================================================
+
+% Predictions
+\addplot[colorPred, only marks, mark=*, mark size=0.6pt, opacity=0.12, forget plot]
+  table[col sep=comma, ignore chars={"},
+        x=observedmissingness, y=predictions]
+  {\pointsfile};
+
+\addplot[colorPred, very thick]
+  table[col sep=comma, ignore chars={"},
+        y=predictions]
+  {\loessfile};
+
+% Scores
+\addplot[colorScore, only marks, mark=*, mark size=0.6pt, opacity=0.12, forget plot]
+  table[col sep=comma, ignore chars={"},
+        x=observedmissingness, y=scores]
+  {\pointsfile};
+
+\addplot[colorScore, very thick]
+  table[col sep=comma, ignore chars={"},
+        y=scores]
+  {\loessfile};
+
+% Complete
+\addplot[colorComp, only marks, mark=*, mark size=0.6pt, opacity=0.12, forget plot]
+  table[col sep=comma, ignore chars={"},
+        x=observedmissingness, y=complete]
+  {\pointsfile};
+
+\addplot[colorComp, very thick]
+  table[col sep=comma, ignore chars={"},
+        y=complete]
+  {\loessfile};
+
+% =================================================
+% References (dashed loess only)
+% =================================================
+
+\addplot[colorPred, very thick, dashed]
+  table[col sep=comma, ignore chars={"},
+        y=predictionsref]
+  {\loessfile};
+
+\addplot[colorScore, very thick, dashed]
+  table[col sep=comma, ignore chars={"},
+        y=scoresref]
+  {\loessfile};
+
+\addplot[colorComp, very thick, dashed]
+  table[col sep=comma, ignore chars={"},
+        y=completeref]
+  {\loessfile};
