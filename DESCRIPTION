@@ -1,13 +1,13 @@
 Package: SimulationsForMissingnessInPrediction
 Type: Package
-Title: Simulation code for evaluating prediction methods in presence of missing data under various mechanisms
+Title: Simulation code for evaluating methods for handling missing data in prediction analysis under various mechanisms
 Version: 1.0
 Authors@R: c(
     person("Pierre", "Catoire", role = c("aut", "cre")),
     person("Cécile", "Proust-Lima", role = "aut"),
     person("Robin", "Genuer", role = "aut")
   )
-Description: Internal code and documentation for a simulation study.
+Description: Internal code and documentation for simulation study comparing performance of various methods for developing, validating and deploying prediction functions in presence of missing data.
 License: MIT
 Encoding: UTF-8
 LazyData: true

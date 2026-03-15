@@ -23,10 +23,23 @@ library(mice)
 # 1. VALIDATION PHASE
 ############################################################
 
-pooling_methods = c("predictions", "scores", "complete")
+df_results_list = list()
 
 for (scenario in missingness_scenarios) {
   
+  df_results = data.frame("MISSPROP" = numeric(),
+                          "RPTRAINED" = numeric(),
+                          "PPTRAINED" = numeric(),
+                          "CCVTRAINED" = numeric(),
+                          "RAWTRAINED" = numeric(),
+                          "RPBAYES" = numeric(),
+                          "PPBAYES" = numeric(),
+                          "CCVBAYES" = numeric(),
+                          "RAWBAYES" = numeric(),
+                          "RISKFULL" = numeric(),
+                          "RISKOBS" = numeric(),
+                          "RISKFULLUNCONDITIONAL" = numeric())
+  i = 1
   for (missingness_target_X1 in missingness_grid) {
     
     message("Scenario: ", scenario, ", missingness target: ", missingness_target_X1)
@@ -43,227 +56,81 @@ for (scenario in missingness_scenarios) {
     data_test  = simulation_object[["data"]][["test"]]
     y_true     = data_test[["Y"]]
     
-    model_mi   = train_mi(data_train)
-    model_mimi = train_mimi(data_train)
+    validation_object = list("missingness_proportion_MX1" = mean(data_train[["MX1"]]),
+                             "simulation_object" = simulation_object)
     
-    models = list(
-      mi   = list(train = model_mi,   predict = predict_mi),
-      mimi = list(train = model_mimi, predict = predict_mimi)
-    )
+    # Analysis 1. CCV versus MI-PP vs MI-RP
+    validation_results = list("trained" = list(),
+                              "bayes-optimal" = list())
     
-    settings = expand.grid(
-      include_miss_inds = c(FALSE, TRUE),
-      include_outcome   = c(FALSE, TRUE)
-    )
+    # results of a predictor allowing missing predictors at deployment
+    raw_results = list("trained" = compute_msd(y_true,
+                                               simulation_object[["predictions"]][["mi"]]),
+                       "bayes_optimal" = compute_msd(y_true,
+                                                     unlist(simulation_object[["reference_probabilities"]][["refMU"]])))
+    #TODO: why is the raw application of optimal MU predictor different from the results obtained after MI-PP ???
+    # Because the imputation is NOT done with Y!!!!! and so not MAR in 5!!
     
-    validation_results = list()
+    ## impute the testing set
+    pm_test = make.predictorMatrix(data_test[, c("X1","X2","Y")])
+    pm_test[,"Y"] = 0
+    pm_test["Y",] = 0
+    imp_test = mice(data_test[,c("X1","X2","Y")], method = "norm",
+                    m = 5,
+                    predictorMatrix = pm_test,
+                    printFlag = F)
+    test_list = complete(imp_test, "all")
     
-    for (i in seq_len(nrow(settings))) {
+    ### impute the training set
+    imp_train = mice(data_train[,c("X1","X2","Y")], method = "norm", m = 5,
+                     printFlag = F)
+    
+    ### Fit linear model across imputed datasets
+    fit_train = with(imp_train, lm(Y ~ X1 + X2))
+    coef_train = setNames(pool(fit_train)[,3][,"estimate"],
+                          pool(fit_train)[,3][,"term"])
+    
+    coefList = list("trained" = coef_train,
+                    "bayes_optimal" = theta[["Y"]][["beta"]])
+    
+    for (coefName in names(coefList)) { # iterate between trained and Bayes-optimal forecasters
+      coef = coefList[[coefName]]
       
-      s = settings[i, ]
+      ### predict Y in each imputed testing set
+      pred_list = lapply(test_list, function(dat) {
+        X = model.matrix(Y ~ X1 + X2, dat)
+        as.vector(X %*% coef)
+      })
       
-      imputed_sets = impute_at_validation(
-        data_test,
-        m = 5,
-        predictors = predictors,
-        outcome = outcome,
-        miss_inds = miss_inds,
-        include_miss_inds = s[["include_miss_inds"]],
-        include_outcome   = s[["include_outcome"]]
-      )
+      ### MSE - pool risk
+      mse_vec = sapply(pred_list, function(pred) {
+        compute_msd(y_true,pred)
+      })
+      mse_rp = mean(mse_vec)
       
-      setting_name = paste0(
-        ifelse(s[["include_miss_inds"]], "missIndsIncluded", "missIndsExcluded"),
-        ifelse(s[["include_outcome"]], "outcomeIncluded", "outcomeExcluded")
-      )
+      ### MSE - pool predictions
+      pred_matrix = do.call(cbind, pred_list)
+      pred_pooled = rowMeans(pred_matrix)
+      mse_pp = compute_msd(y_true, pred_pooled)
       
-      validation_results[[setting_name]] = list()
+      ### MSE - complete case validation
+      data_test_ccv = data_test[complete.cases(data_test[,c("X1","X2")]),]
+      pred_ccv = model.matrix(Y ~ X1 + X2, data_test_ccv) %*% coef
+      y_ccv = data_test_ccv[["Y"]]
+      mse_ccv = compute_msd(y_ccv, pred_ccv)
       
-      reference_performance = get_reference_performance(imputed_sets,
-                                                        y_true,
-                                                        scenario)
-      
-      for (model_name in names(models)) {
-        
-        for (pool in pooling_methods) {
-          
-          validation_results[[setting_name]][[model_name]][["predicted"]][[pool]] =
-            get_function_performance(
-              models[[model_name]][["predict"]],
-              models[[model_name]][["train"]],
-              imputed_validation_sets = imputed_sets,
-              y_true = y_true,
-              pooling_method = pool
-            )
-          
-          key_reference = paste0("mse", pool, "ref")
-          
-          validation_results[[setting_name]][[model_name]][["reference"]][[pool]] =
-            reference_performance[[model_name]][[pool]]
-          
-        }
-      }
+      validation_results[[coefName]][["RP"]] = mse_rp
+      validation_results[[coefName]][["PP"]] = mse_pp
+      validation_results[[coefName]][["CCV"]] = mse_ccv
     }
-    
-    validation_object = list(
-      observed_missingness_train = mean(data_train[["MX1"]]),
-      simulation_object = simulation_object,
-      validation_results = validation_results
-    )
-    
-    raw_dir = file.path(
-      "output/validation/raw",
-      scenario,
-      sprintf("missingness_target_X1_%0.3f", missingness_target_X1)
-    )
-    
-    dir.create(raw_dir, recursive = TRUE, showWarnings = FALSE)
-    
-    saveRDS(
-      validation_object,
-      file = file.path(
-        raw_dir,
-        sprintf("validation_%s_%0.3f.rds", scenario, missingness_target_X1)
-      )
-    )
+    beta_phi = simulation_object[["beta_phi"]]
+    risks = unlist(compute_true_risks(theta, beta_phi, N = 1e6))
+    df_results[i,] = c(mean(data_train[["MX1"]]),
+                       c(unname(unlist(validation_results[["trained"]])),raw_results[["trained"]]),
+                       c(unname(unlist(validation_results[["bayes_optimal"]])),raw_results[["trained"]]),
+                       risks)
+    i = i+1
   }
+  df_results_list[[scenario]] = df_results
 }
 
-############################################################
-# 2. TABLE BUILDING PHASE
-############################################################
-
-for (scenario in missingness_scenarios) {
-  
-  settings = expand.grid(
-    include_miss_inds = c(FALSE, TRUE),
-    include_outcome   = c(FALSE, TRUE)
-  )
-  
-  for (i in seq_len(nrow(settings))) {
-    
-    s = settings[i, ]
-    
-    setting_name = paste0(
-      ifelse(s[["include_miss_inds"]], "missIndsIncluded", "missIndsExcluded"),
-      ifelse(s[["include_outcome"]], "outcomeIncluded", "outcomeExcluded")
-    )
-    
-    for (model_name in c("mi", "mimi")) {
-      table_rows = list()
-      final_table = list()
-      
-      for (missingness_target_X1 in missingness_grid) {
-        
-        raw_dir = file.path(
-          "output/validation/raw",
-          scenario,
-          sprintf("missingness_target_X1_%0.3f", missingness_target_X1)
-        )
-        
-        validation_object = readRDS(
-          file.path(
-            raw_dir,
-            sprintf("validation_%s_%0.3f.rds", scenario, missingness_target_X1)
-          )
-        )
-        
-        simulation_object = validation_object[["simulation_object"]]
-        
-        vr = validation_object[["validation_results"]][[setting_name]]
-        
-        
-        table_row = data.frame(
-          observedmissingness = validation_object[["observed_missingness_train"]],
-          targetmissingness   = missingness_target_X1)
-        
-        for (pool in pooling_methods) {
-          table_row[[pool]] = vr[[model_name]][["predicted"]][[pool]]
-          table_row[[paste0(pool,"ref")]] = vr[[model_name]][["reference"]][[pool]]
-        }
-        
-        table_rows[[length(table_rows) + 1]] = table_row
-      }
-      final_table = do.call(base::rbind, table_rows)
-      
-      write.csv(
-        final_table,
-        file = file.path(
-          "output/validation/tables",
-          sprintf(
-            "%s_%s_%s_%s_points.csv",
-            scenario,
-            ifelse(s[["include_outcome"]], "outcomeIncluded", "outcomeExcluded"),
-            ifelse(s[["include_miss_inds"]], "missIndsIncluded", "missIndsExcluded"),
-            model_name
-          )
-        ),
-        row.names = FALSE
-      )
-      
-      message(sprintf(
-        "%s_%s_%s_%s_points.csv",
-        scenario,
-        ifelse(s[["include_outcome"]], "outcomeIncluded", "outcomeExcluded"),
-        ifelse(s[["include_miss_inds"]], "missIndsIncluded", "missIndsExcluded"),
-        model_name
-      ),
-      " /// ",
-      nrow(final_table))
-      
-      ## ----------------------------------------------------------------------
-      ## LOESS-smoothed table
-      ## ----------------------------------------------------------------------
-      x = final_table[["observedmissingness"]]
-      
-      ## Common prediction grid
-      xloess = seq(
-        min(x, na.rm = TRUE),
-        max(x, na.rm = TRUE),
-        length.out = n_loess
-      )
-      
-      df_loess = data.frame(observedmissingness = xloess)
-      
-      method_names = setdiff(
-        names(final_table),
-        c("observedmissingness", "targetmissingness")
-      )
-      
-      for (m in method_names) {
-        
-        df_loess[[m]] =
-          loess_smooth_series(
-            x = final_table[["observedmissingness"]],
-            y = final_table[[m]],
-            xloess = xloess,
-            span = loess_span,
-            trim = loess_trim
-          )
-      }
-      
-      write.csv(
-        df_loess,
-        file = file.path(
-          "output/validation/tables",
-          sprintf(
-            "%s_%s_%s_%s_loess.csv",
-            scenario,
-            ifelse(s[["include_outcome"]], "outcomeIncluded", "outcomeExcluded"),
-            ifelse(s[["include_miss_inds"]], "missIndsIncluded", "missIndsExcluded"),
-            model_name
-          )
-        ),
-        row.names = FALSE
-      )
-    }
-  }
-}
-
-#TODO: fit LOESS similarly to application
-
-## Session info
-capture.output(
-  sessionInfo(),
-  file = "output/validation/sessionInfoMain.txt"
-)

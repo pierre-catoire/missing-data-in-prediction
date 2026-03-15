@@ -112,7 +112,8 @@ for (scenario in missingness_scenarios) {
                                      "refOMU" = refOMU,
                                      "refOMC" = refOMC),
       metadata = list(scenario = scenario,
-                      missingness_target_X1 = missingness_target_X1)
+                      missingness_target_X1 = missingness_target_X1),
+      beta_phi = beta_phi
     )
     
     # Archive raw simulation object

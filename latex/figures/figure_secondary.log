@@ -1,7 +1,7 @@
-This is LuaHBTeX, Version 1.18.0 (TeX Live 2025/dev/Debian)  (format=lualatex 2026.1.25)  13 FEB 2026 04:20
+This is LuaHBTeX, Version 1.18.0 (TeX Live 2025/dev/Debian)  (format=lualatex 2026.1.25)  13 FEB 2026 01:33
  restricted system commands enabled.
-**figure_validation.tex
-(./figure_validation.tex
+**figure_secondary.tex
+(./figure_secondary.tex
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
 Lua module: luaotfload 2024-12-03 v3.29 Lua based OpenType font support
@@ -541,7 +541,24 @@ File: tikzlibraryplotmarks.code.tex 2023-01-15 v3.1.10 (3.1.10)
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/libraries/pgflibraryplotmarks.co
 de.tex
 File: pgflibraryplotmarks.code.tex 2023-01-15 v3.1.10 (3.1.10)
-)))
+))) (/usr/share/texlive/texmf-dist/tex/latex/pgfplots/pgfplotstable.sty
+(/usr/share/texlive/texmf-dist/tex/generic/pgfplots/pgfplots.revision.tex)
+Package: pgfplotstable 2021/05/15 v1.18.1 Table typesetting and Pretty-printing
+ (1.18.1)
+
+(/usr/share/texlive/texmf-dist/tex/generic/pgfplots/numtable/pgfplotstable.code
+.tex
+(/usr/share/texlive/texmf-dist/tex/generic/pgfplots/numtable/pgfplotstable.colt
+ype.code.tex)) (/usr/share/texlive/texmf-dist/tex/latex/tools/array.sty
+Package: array 2024/10/17 v2.6g Tabular extension package (FMi)
+\col@sep=\dimen263
+\ar@mcellbox=\box65
+\extrarowheight=\dimen264
+\NC@list=\toks39
+\extratabsurround=\skip51
+\backup@length=\skip52
+\ar@cellbox=\box66
+))
 (/usr/share/texlive/texmf-dist/tex/generic/pgfplots/libs/tikzlibrarypgfplots.gr
 oupplots.code.tex
 \pgfplots@group@current@plot=\count299
@@ -556,41 +573,40 @@ File: tikzlibrarycalc.code.tex 2023-01-15 v3.1.10 (3.1.10)
 File: l3backend-luatex.def 2024-05-08 L3 backend support: PDF output (LuaTeX)
 \l__color_backend_stack_int=\count302
 Inserting `l3color' in `luaotfload.parse_color'.
-\l__pdf_internal_box=\box65
+\l__pdf_internal_box=\box67
 )
-(./figure_validation.aux)
-\openout1 = figure_validation.aux
+No file figure_secondary.aux.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-
+\openout1 = figure_secondary.aux
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 135.
+LaTeX Font Info:    ... okay on input line 135.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 135.
+LaTeX Font Info:    ... okay on input line 135.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 135.
+LaTeX Font Info:    ... okay on input line 135.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 135.
+LaTeX Font Info:    ... okay on input line 135.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 135.
+LaTeX Font Info:    ... okay on input line 135.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 135.
+LaTeX Font Info:    ... okay on input line 135.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 135.
+LaTeX Font Info:    ... okay on input line 135.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 135.
+LaTeX Font Info:    ... okay on input line 135.
 (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count303
-\scratchdimen=\dimen263
-\scratchbox=\box66
+\scratchdimen=\dimen265
+\scratchbox=\box68
 \nofMPsegments=\count304
 \nofMParguments=\count305
-\everyMPshowfont=\toks39
+\everyMPshowfont=\toks40
 \MPscratchCnt=\count306
-\MPscratchDim=\dimen264
+\MPscratchDim=\dimen266
 \MPnumerator=\count307
 \makeMPintoPDFobject=\count308
-\everyMPtoPDFconversion=\toks40
+\everyMPtoPDFconversion=\toks41
 ) (/usr/share/texlive/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
 Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
@@ -603,240 +619,74 @@ e
 Package pgfplots notification 'compat/show suggested version=true': document ha
 s been generated with the most recent feature set (\pgfplotsset{compat=1.18}).
 
-Package pgfplots info on input line 106: Using 'lua backend=false' for plot 0 (
-type 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-Package pgfplots info on input line 109: Using 'lua backend=false' for plot 1 (
-type 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-Package pgfplots info on input line 112: Using 'lua backend=false' for plot 2 (
-type 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-Package pgfplots info on input line 115: Using 'lua backend=false' for plot 3 (
-type 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-Package pgfplots info on input line 118: Using 'lua backend=false' for plot 4 (
-type 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-Package pgfplots info on input line 121: Using 'lua backend=false' for plot 5 (
-type 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-(./figure_scenario_validation.tex
-Package pgfplots info on input line 23: Using 'lua backend=false' for plot 0 (t
-ype 'pgfplothandlerdiscard'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M1_outcomeExcluded_missIndsEx
-cluded_mi_points.csv}
-Package pgfplots info on input line 28: Using 'lua backend=false' for plot 0 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M1_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 34: Using 'lua backend=false' for plot 1 (t
-ype 'pgfplothandlerdiscard'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M1_outcomeExcluded_missIndsEx
-cluded_mi_points.csv}
-Package pgfplots info on input line 39: Using 'lua backend=false' for plot 1 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M1_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 45: Using 'lua backend=false' for plot 2 (t
-ype 'pgfplothandlerdiscard'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M1_outcomeExcluded_missIndsEx
-cluded_mi_points.csv}
-Package pgfplots info on input line 50: Using 'lua backend=false' for plot 2 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M1_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 59: Using 'lua backend=false' for plot 3 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M1_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 64: Using 'lua backend=false' for plot 4 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M1_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 69: Using 'lua backend=false' for plot 5 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M1_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-)
+PGFPlots: reading {../../output/secondary/tables/M5_overall_mse_points.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_overall_mse_loess.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_overall_mse_points.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_overall_mse_loess.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_overall_mse_points.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_overall_mse_loess.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_overall_mse_points.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_overall_mse_loess.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_overall_mse_loess.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_overall_mse_loess.csv}
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <9> on input line 132.
+(Font)              <9> on input line 187.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 132.
+(Font)              <6> on input line 187.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 132.
- (./figure_scenario_validation.tex
-Package pgfplots info on input line 23: Using 'lua backend=false' for plot 0 (t
-ype 'pgfplothandlerdiscard'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M2_outcomeExcluded_missIndsEx
-cluded_mi_points.csv}
-Package pgfplots info on input line 28: Using 'lua backend=false' for plot 0 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M2_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 34: Using 'lua backend=false' for plot 1 (t
-ype 'pgfplothandlerdiscard'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M2_outcomeExcluded_missIndsEx
-cluded_mi_points.csv}
-Package pgfplots info on input line 39: Using 'lua backend=false' for plot 1 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M2_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 45: Using 'lua backend=false' for plot 2 (t
-ype 'pgfplothandlerdiscard'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M2_outcomeExcluded_missIndsEx
-cluded_mi_points.csv}
-Package pgfplots info on input line 50: Using 'lua backend=false' for plot 2 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M2_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 59: Using 'lua backend=false' for plot 3 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M2_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 64: Using 'lua backend=false' for plot 4 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M2_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 69: Using 'lua backend=false' for plot 5 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M2_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-)
-(./figure_scenario_validation.tex
-Package pgfplots info on input line 23: Using 'lua backend=false' for plot 0 (t
-ype 'pgfplothandlerdiscard'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M3_outcomeExcluded_missIndsEx
-cluded_mi_points.csv}
-Package pgfplots info on input line 28: Using 'lua backend=false' for plot 0 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M3_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 34: Using 'lua backend=false' for plot 1 (t
-ype 'pgfplothandlerdiscard'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M3_outcomeExcluded_missIndsEx
-cluded_mi_points.csv}
-Package pgfplots info on input line 39: Using 'lua backend=false' for plot 1 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M3_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 45: Using 'lua backend=false' for plot 2 (t
-ype 'pgfplothandlerdiscard'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M3_outcomeExcluded_missIndsEx
-cluded_mi_points.csv}
-Package pgfplots info on input line 50: Using 'lua backend=false' for plot 2 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M3_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 59: Using 'lua backend=false' for plot 3 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M3_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 64: Using 'lua backend=false' for plot 4 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M3_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 69: Using 'lua backend=false' for plot 5 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M3_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-) (./figure_scenario_validation.tex
-Package pgfplots info on input line 23: Using 'lua backend=false' for plot 0 (t
-ype 'pgfplothandlerdiscard'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M4_outcomeExcluded_missIndsEx
-cluded_mi_points.csv}
-Package pgfplots info on input line 28: Using 'lua backend=false' for plot 0 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M4_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 34: Using 'lua backend=false' for plot 1 (t
-ype 'pgfplothandlerdiscard'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M4_outcomeExcluded_missIndsEx
-cluded_mi_points.csv}
-Package pgfplots info on input line 39: Using 'lua backend=false' for plot 1 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M4_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 45: Using 'lua backend=false' for plot 2 (t
-ype 'pgfplothandlerdiscard'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M4_outcomeExcluded_missIndsEx
-cluded_mi_points.csv}
-Package pgfplots info on input line 50: Using 'lua backend=false' for plot 2 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M4_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 59: Using 'lua backend=false' for plot 3 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M4_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 64: Using 'lua backend=false' for plot 4 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M4_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 69: Using 'lua backend=false' for plot 5 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M4_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-)
-(./figure_scenario_validation.tex
-Package pgfplots info on input line 23: Using 'lua backend=false' for plot 0 (t
-ype 'pgfplothandlerdiscard'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M5_outcomeExcluded_missIndsEx
-cluded_mi_points.csv}
-Package pgfplots info on input line 28: Using 'lua backend=false' for plot 0 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M5_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 34: Using 'lua backend=false' for plot 1 (t
-ype 'pgfplothandlerdiscard'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M5_outcomeExcluded_missIndsEx
-cluded_mi_points.csv}
-Package pgfplots info on input line 39: Using 'lua backend=false' for plot 1 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M5_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 45: Using 'lua backend=false' for plot 2 (t
-ype 'pgfplothandlerdiscard'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M5_outcomeExcluded_missIndsEx
-cluded_mi_points.csv}
-Package pgfplots info on input line 50: Using 'lua backend=false' for plot 2 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M5_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 59: Using 'lua backend=false' for plot 3 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M5_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 64: Using 'lua backend=false' for plot 4 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M5_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-Package pgfplots info on input line 69: Using 'lua backend=false' for plot 5 (t
-ype 'pgfplothandlerlineto'): LUA does not support y filter (yet).
-PGFPlots: reading {../../output/validation/tables/M5_outcomeExcluded_missIndsEx
-cluded_mi_loess.csv}
-)
+(Font)              <5> on input line 187.
+PGFPlots: reading {../../output/secondary/tables/M5_complete_mse_points.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_complete_mse_loess.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_complete_mse_points.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_complete_mse_loess.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_complete_mse_points.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_complete_mse_loess.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_complete_mse_points.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_complete_mse_loess.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_complete_mse_loess.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_complete_mse_loess.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_incomplete_mse_points.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_incomplete_mse_loess.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_incomplete_mse_points.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_incomplete_mse_loess.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_incomplete_mse_points.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_incomplete_mse_loess.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_incomplete_mse_points.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_incomplete_mse_loess.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_incomplete_mse_loess.csv}
+PGFPlots: reading {../../output/secondary/tables/M5_incomplete_mse_loess.csv}
+
 
 [1
 
 
 Non-PDF special ignored!{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
-(./figure_validation.aux)
+(./figure_secondary.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
 )
 
 Here is how much of LuaTeX's memory you used:
- 24243 strings out of 475512
- 476917,2848258 words of node,token memory allocated
- 413 words of node memory still in use:
-   3 hlist, 1 vlist, 1 rule, 2 glue, 3 kern, 1 glyph, 5 attribute, 48 glue_spec,
+ 24731 strings out of 475512
+ 1164281,4101490 words of node,token memory allocated
+ 418 words of node memory still in use:
+   3 hlist, 1 vlist, 1 rule, 2 glue, 3 kern, 1 glyph, 5 attribute, 49 glue_spec,
  5 attribute_list, 2 write nodes
-   avail lists: 1:2,2:63210,3:89531,4:514,5:63,6:2,7:8093,8:3,9:1992,11:186
- 46335 multiletter control sequences out of 65536+600000
+   avail lists: 1:5,2:161308,3:238904,4:382,5:45,6:2,7:4427,8:4,9:1134,11:75
+ 46918 multiletter control sequences out of 65536+600000
  26 fonts using 1477063 bytes
- 117i,18n,114p,9739b,2356s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 117i,18n,114p,9763b,2315s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texmf/fonts/opentype/public/lm/lmroman10-regular.otf></usr/share/tex
 mf/fonts/opentype/public/lm/lmroman9-regular.otf></usr/share/texlive/texmf-dist/
 fonts/type1/public/amsfonts/cm/cmmi9.pfb></usr/share/texlive/texmf-dist/fonts/ty
 pe1/public/amsfonts/cm/cmr9.pfb>
-Output written on figure_validation.pdf (1 page, 253483 bytes).
+Output written on figure_secondary.pdf (1 page, 707925 bytes).
 
 PDF statistics: 33 PDF objects out of 1000 (max. 8388607)
  21 compressed objects within 1 object stream

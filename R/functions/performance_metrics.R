@@ -86,9 +86,15 @@ evaluate_performance = function(simulation_object) {
   MX1        = data_test$MX1
   
   predictions = simulation_object$predictions
-  references  = simulation_object$reference_probabilities[c("refMU","refMC")]
-  oracles     = simulation_object$reference_probabilities[c("refOMU","refOMC")]
   
+  oracles     = lapply(
+    simulation_object$reference_probabilities[c("refOMU","refOMC")],
+    as.numeric
+  )
+  references = lapply(
+    simulation_object$reference_probabilities[c("refMU","refMC")],
+    as.numeric
+  )
   ## Define groups
   groups = list(
     overall    = rep(TRUE, length(Y_true)),

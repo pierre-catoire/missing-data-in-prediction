@@ -519,7 +519,7 @@ train_mi = function(dataset, m = 5, method = "norm") {
 #'
 #' @seealso \code{\link{train_mi}}, \code{\link{mice}}
 predict_mi = function(mi_model, newdata) {
-  idx1 = newdata[["MX1"]] == 1
+  idx1 = is.na(newdata[["X1"]]) # TODO: Corrected from newdata[["MX1"]] == 1 for validation
   result = list()
   for(m in 1:mi_model[["m"]]){
     newdata[idx1,"X1"] = predict(mi_model[["impModel"]][[m]],
@@ -632,7 +632,7 @@ train_mimi = function(dataset, m = 5, method = "norm") {
 #'
 #' @seealso \code{\link{train_mimi}}, \code{\link{predict_mi}}, \code{\link{mice}}
 predict_mimi = function(mimi_model, newdata) {
-  idx1 = newdata[["MX1"]] == 1
+  idx1 = is.na(newdata[["X1"]])# corrected from newdata[["MX1"]] == 1 for validation
   result = list()
   
   for(m in 1:mimi_model[["m"]]){

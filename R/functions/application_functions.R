@@ -1,24 +1,67 @@
 # The functions listed above are used only for the application
 
-
+#' Order a named vector by its names
+#'
+#' Reorders a named vector according to the alphabetical order of its names.
+#' This is used to ensure consistent alignment between coefficient vectors
+#' and design matrices before matrix multiplication.
+#'
+#' @param x A named numeric vector.
+#'
+#' @return A numeric vector sorted according to \code{names(x)}.
+#' @export
 order_by_name_vector = function(x){
   name_order = order(names(x))
   sorted_vector = x[name_order]
   return(sorted_vector)
 }
 
+#' Order matrix columns by column names
+#'
+#' Reorders the columns of a matrix according to the alphabetical order
+#' of its column names. This is used to align predictor matrices with
+#' coefficient vectors before computing linear predictors.
+#'
+#' @param x A matrix with named columns.
+#'
+#' @return A matrix with columns sorted according to \code{colnames(x)}.
+#' @export
 order_by_name_matrix = function(x){
   name_order = order(colnames(x))
   sorted_matrix = x[,name_order]
   return(sorted_matrix)
 }
 
+#' Extract missingness patterns as binary strings
+#'
+#' For a given dataset and set of predictors, returns a character vector
+#' encoding the missingness pattern of each observation. Each pattern is
+#' represented as a string of 0s and 1s, where 1 indicates a missing value.
+#'
+#' @param dataset A data frame.
+#' @param predictors A character vector of predictor names.
+#'
+#' @return A character vector of length \code{nrow(dataset)} containing
+#' binary missingness patterns.
+#' @export
 get_patterns = function(dataset,predictors){
   apply(is.na(dataset[,predictors]),1,
         function(z) paste(as.integer(z), collapse = "")
   )
 }
 
+#' Fit pattern-specific logistic regression submodels
+#'
+#' Fits one logistic regression model per observed missingness pattern.
+#' For each pattern, only predictors fully observed in that subset are used.
+#' Binary predictors with only one observed level in the subset are excluded.
+#'
+#' @param data_train Training dataset containing predictors and binary outcome \code{Y}.
+#' @param predictors Character vector of predictor names.
+#'
+#' @return A list of fitted \code{glm} objects indexed by missingness pattern.
+#' The list also contains the original \code{predictors}.
+#' @export
 fitps = function(data_train, predictors){
   # Get patterns as strings in data_train
   data_train[["pattern"]] = get_patterns(data_train, predictors)
@@ -61,6 +104,16 @@ fitps = function(data_train, predictors){
   return(pattern_submodels)
 }
 
+#' Predict using pattern-specific submodels
+#'
+#' Generates predicted probabilities for a test dataset using
+#' pattern-specific logistic regression models fitted by \code{fitps()}.
+#'
+#' @param data_test Test dataset.
+#' @param pattern_submodels Output of \code{fitps()}.
+#'
+#' @return A numeric vector of predicted probabilities.
+#' @export
 predps = function(data_test, pattern_submodels){
   predictors = pattern_submodels[["predictors"]]
   # Initialise predictions
@@ -82,7 +135,26 @@ predps = function(data_test, pattern_submodels){
   return(preds)
 }
 
-# Fit multiple imputation model
+#' Fit multiple imputation prediction model (MI)
+#'
+#' Performs multiple imputation using \code{mice()}, then:
+#' \itemize{
+#'   \item Fits a pooled logistic regression prediction model for \code{Y}
+#'   using all predictors.
+#'   \item Fits pooled imputation models for each predictor within each
+#'   missingness pattern.
+#' }
+#'
+#' @param data_train Training dataset.
+#' @param predictors Character vector of predictor names.
+#'
+#' @return A list containing:
+#' \itemize{
+#'   \item \code{predictors}: predictor names,
+#'   \item \code{impFunctions}: imputation models per pattern,
+#'   \item \code{predFunction}: pooled prediction coefficients.
+#' }
+#' @export
 fitmi = function(data_train,predictors){
   # Get patterns as strings in data_train
   data_train[["pattern"]] = get_patterns(data_train, predictors)
@@ -126,7 +198,20 @@ fitmi = function(data_train,predictors){
               predFunction = predFunction))
 }
 
-# Predict using MI for one observation
+#' Predict outcome for one observation using MI
+#'
+#' For a single observation, missing predictors are imputed via
+#' Monte Carlo sampling using pooled imputation models. Predictions
+#' are averaged across simulated imputations.
+#'
+#' Currently implemented for binary predictors only.
+#'
+#' @param individual A single-row data frame.
+#' @param mimodel Output of \code{fitmi()}.
+#' @param nSample Number of Monte Carlo samples (default 1000).
+#'
+#' @return Predicted probability.
+#' @export
 predmi_byrow = function(individual, mimodel, nSample = 1000){
   # Extract the variables
   pattern = individual[["pattern"]]
@@ -188,6 +273,15 @@ predmi_byrow = function(individual, mimodel, nSample = 1000){
   return(pred)
 }
 
+#' Predict using multiple imputation (MI)
+#'
+#' Applies \code{predmi_byrow()} to each observation in a dataset.
+#'
+#' @param data_test Test dataset.
+#' @param mimodel Output of \code{fitmi()}.
+#'
+#' @return Numeric vector of predicted probabilities.
+#' @export
 predmi = function(data_test, mimodel){
   predictors = mimodel[["predictors"]]
   # get the patterns in data_test
@@ -201,6 +295,23 @@ predmi = function(data_test, mimodel){
   return(res)
 }
 
+#' Fit multiple imputation model with missingness indicators (MIMI)
+#'
+#' Extends MI by augmenting the model with missingness indicator variables.
+#' Performs multiple imputation and fits pooled prediction and imputation
+#' models including both predictors and missingness indicators.
+#'
+#' @param data_train Training dataset.
+#' @param predictors Character vector of predictor names.
+#'
+#' @return A list containing:
+#' \itemize{
+#'   \item \code{predictors}
+#'   \item \code{impFunctions}
+#'   \item \code{predFunction}
+#'   \item \code{miss_inds}: missingness indicator names
+#' }
+#' @export
 fitmimi = function(data_train,predictors){
   # Create a vector of missingness indicators
   miss_inds = c()
@@ -257,7 +368,20 @@ fitmimi = function(data_train,predictors){
               miss_inds = miss_inds))
 }
 
-# Predict using MIMI for an observation
+#' Predict outcome for one observation using MIMI
+#'
+#' Performs Monte Carlo imputation for missing predictors using
+#' imputation models that include missingness indicators, then
+#' averages predicted probabilities across samples.
+#'
+#' Currently implemented for binary predictors only.
+#'
+#' @param individual A single-row data frame.
+#' @param mimimodel Output of \code{fitmimi()}.
+#' @param nSample Number of Monte Carlo samples (default 1000).
+#'
+#' @return Predicted probability.
+#' @export
 predmimi_byrow = function(individual, mimimodel, nSample = 1000){
   # Extract the variables
   pattern = individual[["pattern"]]
@@ -327,6 +451,15 @@ predmimi_byrow = function(individual, mimimodel, nSample = 1000){
   return(pred)
 }
 
+#' Predict using MIMI
+#'
+#' Applies \code{predmimi_byrow()} to each observation in a dataset.
+#'
+#' @param data_test Test dataset.
+#' @param mimimodel Output of \code{fitmimi()}.
+#'
+#' @return Numeric vector of predicted probabilities.
+#' @export
 predmimi = function(data_test, mimimodel){
   predictors = mimimodel[["predictors"]]
   # get the patterns in data_test
@@ -340,6 +473,22 @@ predmimi = function(data_test, mimimodel){
   return(res)
 }
 
+#' Bootstrap mean squared error
+#'
+#' Computes the mean squared error (MSE) and a percentile bootstrap
+#' confidence interval.
+#'
+#' @param x Predicted values.
+#' @param y_true True outcome values.
+#' @param nboot Number of bootstrap samples (default 10000).
+#'
+#' @return A list containing:
+#' \itemize{
+#'   \item \code{mse}: empirical MSE
+#'   \item \code{ci}: 95% percentile bootstrap interval
+#'   \item \code{dist}: bootstrap distribution
+#' }
+#' @export
 bootstrap_mse = function(x,y_true,nboot = 10000){
   squared_error = (x-y_true)^2
   res = rep(NA, nboot)
@@ -356,6 +505,18 @@ bootstrap_mse = function(x,y_true,nboot = 10000){
               dist = res))
 }
 
+#' Compute MSE table by missingness pattern
+#'
+#' Computes bootstrap MSE estimates for each training procedure,
+#' overall and stratified by missingness pattern.
+#'
+#' @param predictions Named list of prediction vectors.
+#' @param patterns Character vector of missingness patterns.
+#' @param y_true True outcome values.
+#'
+#' @return A data frame summarizing sample size and MSE with
+#' 95% bootstrap confidence intervals.
+#' @export
 compute_mse_table = function(predictions, patterns, y_true) {
   
   training_procedures = names(predictions)
