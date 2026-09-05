@@ -1,285 +1,235 @@
-#' Perform multiple imputation at validation
+#' Compute oracle conditional expectations for a single observation
 #'
-#' Performs multiple imputation on a validation dataset using \code{mice()},
-#' with flexible control over whether missingness indicators and/or the
-#' outcome are included in the imputation model.
+#' Computes oracle conditional expectations of the outcome \code{Y} under the
+#' true data-generating and missingness mechanisms, for a single observation
+#' characterized by \code{(X1, X2, MX1)}.
 #'
-#' The predictor matrix is modified so that selected variables are excluded
-#' from serving as predictors in the imputation models.
+#' @param X1 Numeric scalar. Value of covariate \code{X1}.
+#' @param X2 Numeric scalar. Value of covariate \code{X2}.
+#' @param MX1 Integer scalar (0 or 1). Missingness indicator for \code{X1}.
+#' @param theta List. Parameters of the joint data-generating model for
+#'   \code{X1}, \code{X2}, and \code{Y}.
+#' @param beta_phi Numeric vector. Coefficients of the logistic missingness model
+#'   for \code{MX1}, including the intercept.
+#' @param B Integer. Monte Carlo sample size used to approximate conditional
+#'   expectations. Defaults to 5,000.
 #'
-#' @param data_test Validation dataset.
-#' @param m Number of multiple imputations (default 5).
-#' @param predictors Character vector of predictor names.
-#' @param outcome Name of the outcome variable (default "Y").
-#' @param miss_inds Character vector of missingness indicator names.
-#' @param include_miss_inds Logical; whether missingness indicators are
-#' included as predictors in the imputation model.
-#' @param include_outcome Logical; whether the outcome is included as a
-#' predictor in the imputation model.
-#'
-#' @return A \code{mids} object from \code{mice()} containing the imputed
-#' validation datasets.
-#'
-#' @details
-#' If \code{include_miss_inds = FALSE}, missingness indicators are prevented
-#' from being used as predictors in the imputation models.
-#'
-#' If \code{include_outcome = FALSE}, the outcome is excluded from the
-#' imputation predictor matrix.
-#'
-#' @export
-impute_at_validation = function(data_test,
-                                m = 5,
-                                predictors = c("X1","X2"),
-                                outcome = "Y",
-                                miss_inds = c("MX1"),
-                                include_miss_inds = FALSE,
-                                include_outcome = FALSE){
-  
-  variables  = c(predictors,outcome,miss_inds)
-  
-  predictor_matrix = make.predictorMatrix(data_test[,variables])
-  
-  if (!include_miss_inds){
-    predictor_matrix[,miss_inds] = 0
-  }
-  
-  if (!include_outcome){
-    predictor_matrix[,outcome] = 0
-  }
-  
-  imp = mice(data_test[,variables],
-             m = m,
-             predictorMatrix = predictor_matrix,
-             printFlag = FALSE)
-  return(imp)
-}
-
-#' Compute predictive performance under different pooling rules
-#'
-#' Computes the mean squared deviation (MSD) of a prediction function
-#' applied to multiply imputed validation datasets, using one of three
-#' pooling strategies:
-#'
-#' \itemize{
-#'   \item \code{"complete"}: Evaluate performance on complete cases only.
-#'   \item \code{"predictions"}: Pool predictions across imputations,
-#'   then compute MSD.
-#'   \item \code{"scores"}: Compute MSD within each imputed dataset,
-#'   then average the scores.
+#' @return A named numeric vector with the following elements:
+#' \describe{
+#'   \item{EY_X1X2}{Oracle value of \eqn{E(Y \mid X_1, X_2)}.}
+#'   \item{EY_X2}{Oracle value of \eqn{E(Y \mid X_2)}.}
+#'   \item{EY_X1X2_MX1}{Oracle value of \eqn{E(Y \mid X_1, X_2, MX_1)}.}
+#'   \item{EY_X2_MX1}{Oracle value of \eqn{E(Y \mid X_2, MX_1)}.}
 #' }
 #'
-#' @param prediction_function Function used to generate predictions.
-#' Must accept arguments \code{prediction_model} and \code{newdata}.
-#' @param prediction_model Fitted prediction model object.
-#' @param imputed_validation_sets A \code{mids} object containing
-#' multiply imputed validation datasets.
-#' @param y_true True outcome values.
-#' @param pooling_method One of \code{"complete"}, \code{"predictions"},
-#' or \code{"scores"}.
-#'
-#' @return The estimated mean squared deviation.
-#'
 #' @details
-#' The function distinguishes between pooling at the prediction level
-#' (averaging predicted probabilities across imputations) and pooling
-#' at the performance level (averaging MSD across imputations).
+#' The expectationSs conditional on the missingness indicator \code{MX1} are
+#' approximated using Monte Carlo integration under the true missingness model.
+#' The weighting scheme corresponds to conditioning on the observed value of
+#' \code{MX1}.
 #'
-#' @export
-get_function_performance = function(prediction_function,
-                                    prediction_model,
-                                    imputed_validation_sets,
-                                    y_true,
-                                    pooling_method) {
-  if (!(pooling_method %in% c("complete", "predictions", "scores"))) {
-    stop(pooling_method, " must be one of \"complete\", \"predictions\", \"scores\".")
+#' This function is intended for internal use when computing oracle reference
+#' predictors in simulation studies.
+oracle_reference_one = function(X1,
+                                X2,
+                                MX1,
+                                theta,
+                                beta_phi,
+                                B = 5000,
+                                compute_observed = TRUE) {
+  
+  ## --------------------------------------------------------------------------
+  ## 1. E(Y | X1, X2)
+  ## --------------------------------------------------------------------------
+  EY_X1X2 =
+    theta[["Y"]][["beta"]]["(Intercept)"] +
+    theta[["Y"]][["beta"]]["X1"] * X1 +
+    theta[["Y"]][["beta"]]["X2"] * X2
+  
+  ## --------------------------------------------------------------------------
+  ## 2. E(Y | X2)
+  ## --------------------------------------------------------------------------
+  if (compute_observed) {
+    EY_X2 =
+      theta[["Y"]][["beta"]]["(Intercept)"] +
+      theta[["Y"]][["beta"]]["X1"] * theta[["X1"]][["beta"]] +
+      theta[["Y"]][["beta"]]["X2"] * X2
   }
   
-  if (pooling_method == "complete") {
-    data_test = imputed_validation_sets[["data"]]
-    complete_data_test = data_test[complete.cases(data_test),]
-    predictions = prediction_function(prediction_model,
-                                      newdata = complete_data_test)
-    mse = compute_msd(complete_data_test[["Y"]], predictions)
-  } else {
-    nrow_data_test     = nrow(imputed_validation_sets[["data"]])
-    m_imputed_datasets = imputed_validation_sets[["m"]]
-    
-    predictions = matrix(NA,
-                         nrow = nrow_data_test,
-                         ncol = m_imputed_datasets)
-    
-    for (imputation_index in 1:m_imputed_datasets) {
-      imputed_dataset = complete(imputed_validation_sets,
-                                 imputation_index)
-      
-      predictions[,imputation_index] = prediction_function(prediction_model,
-                                                           newdata = imputed_dataset)
-    }
-    
-    if (pooling_method == "predictions") {
-      pooled_predictions = rowMeans(predictions)
-      mse = compute_msd(y_true, pooled_predictions)
-    } else if (pooling_method == "scores") {
-      pooled_scores = apply(predictions, MARGIN = 2, FUN = compute_msd, reference = y_true)
-      mse = mean(pooled_scores)
-    }
-  }
+  ## --------------------------------------------------------------------------
+  ## 3. E(Y | X1, X2, MX1)  (MC integration)
+  ## --------------------------------------------------------------------------
+  Y_draws =
+    rnorm(B, mean = EY_X1X2, sd = theta[["Y"]][["sigma"]])
   
-  return(mse)
-}
-
-#' Compute reference predictive performance
-#'
-#' Computes reference (oracle) predictive performance for both
-#' MI and MIMI target quantities under different pooling strategies.
-#'
-#' The reference predictions are obtained via
-#' \code{compute_reference_probabilities()}, and mean squared deviation
-#' is computed under:
-#'
-#' \itemize{
-#'   \item \code{"complete"}: Complete-case evaluation,
-#'   \item \code{"predictions"}: Pool predictions across imputations,
-#'   \item \code{"scores"}: Pool performance across imputations.
-#' }
-#'
-#' @param imputed_validation_sets A \code{mids} object containing
-#' multiply imputed validation datasets.
-#' @param y_true True outcome values.
-#' @param scenario Scenario index used to retrieve model parameters.
-#'
-#' @return A nested list of the form:
-#' \code{reference_performance[[model_name]][[pooling_method]]},
-#' where \code{model_name} is \code{"mi"} or \code{"mimi"},
-#' and \code{pooling_method} is one of
-#' \code{"complete"}, \code{"predictions"}, \code{"scores"}.
-#'
-#' @details
-#' Reference probabilities are computed using externally defined
-#' parameters \code{theta} and \code{phi}. Monte Carlo integration
-#' is performed with \code{B = 5000}.
-#'
-#' @export
-get_reference_performance = function(imputed_validation_sets, y_true, scenario) {
-  
-  mse_list = list("mi" = list(),
-                  "mimi" = list())
-  
-  # complete
-  data_test = imputed_validation_sets[["data"]]
-  complete_data_test = data_test[complete.cases(data_test),]
-  references_probabilities = compute_reference_probabilities(complete_data_test,
-                                                             theta = theta,
-                                                             beta_phi = phi[[scenario]][["beta"]],
-                                                             B = 5000,
-                                                             parallel = TRUE,
-                                                             compute_observed = FALSE)
-  
-  mse_list[["mi"]][["complete"]] = compute_msd(complete_data_test[["Y"]],
-                                               unlist(references_probabilities[["EY_X1X2"]]))
-  mse_list[["mimi"]][["complete"]] = compute_msd(complete_data_test[["Y"]],
-                                                 unlist(references_probabilities[["EY_X1X2MX1"]]))
-  
-  # predictions and scores
-  
-  nrow_data_test     = nrow(imputed_validation_sets[["data"]])
-  m_imputed_datasets = imputed_validation_sets[["m"]]
-  
-  prediction_empty_matrix = matrix(NA,
-                                   nrow = nrow_data_test,
-                                   ncol = m_imputed_datasets)
-  predictions_list = list("mi" = prediction_empty_matrix,
-                          "mimi" = prediction_empty_matrix)
-  
-  for (imputation_index in 1:m_imputed_datasets) {
-    imputed_dataset = complete(imputed_validation_sets,
-                               imputation_index)
-    
-    references_probabilities = compute_reference_probabilities(imputed_dataset,
-                                                               theta = theta,
-                                                               beta_phi = phi[[scenario]][["beta"]],
-                                                               B = 5000,
-                                                               parallel = TRUE,
-                                                               compute_observed = FALSE)
-    
-    predictions_list[["mi"]][,imputation_index] = unlist(references_probabilities[["EY_X1X2"]])
-    predictions_list[["mimi"]][,imputation_index] = unlist(references_probabilities[["EY_X1X2MX1"]])
-  }
-  
-  for (method in c("mi", "mimi")) {
-    mse_list[[method]][["predictions"]] = compute_msd(y_true,
-                                                      rowMeans(predictions_list[["mi"]]))
-    mse_list[[method]][["scores"]] = mean(apply(predictions_list[[method]],
-                                                MARGIN = 2,
-                                                FUN = compute_msd,
-                                                reference = y_true))
-  }
-  
-  # must return a list reference_performance[[model_name]][[pool]]
-  return(mse_list)
-}
-
-
-compute_true_risks <- function(theta,
-                               beta_phi,
-                               N = 1e6) {
-  ## --- 1. Extract parameters from theta ---
-  
-  mu1 <- theta$X1$beta[1]
-  sd1 <- theta$X1$sigma
-  
-  mu2 <- theta$X2$beta[1]
-  sd2 <- theta$X2$sigma
-  
-  beta0 <- theta$Y$beta["(Intercept)"]
-  beta1 <- theta$Y$beta["X1"]
-  beta2 <- theta$Y$beta["X2"]
-  sdY   <- theta$Y$sigma
-  
-  ## --- 2. Simulate joint distribution ---
-  
-  X1 <- rnorm(N, mu1, sd1)
-  X2 <- rnorm(N, mu2, sd2)
-  
-  muY_X <- beta0 + beta1 * X1 + beta2 * X2
-  Y <- rnorm(N, muY_X, sdY)
-  
-  epsilon <- Y - muY_X
-  
-  ## --- 3. Simulate missingness using beta_phi ---
-  
-  # Ensure coefficient order
-  lp <- beta_phi["(Intercept)"] +
+  linpred =
+    beta_phi["(Intercept)"] +
     beta_phi["X1"] * X1 +
     beta_phi["X2"] * X2 +
-    beta_phi["Y"]  * Y
+    beta_phi["Y"]  * Y_draws
   
-  pM1 <- plogis(lp)
-  M   <- rbinom(N, 1, pM1)
+  p_MX1 = plogis(linpred)
   
-  ## --- 4. Compute risks ---
+  weights =
+    if (MX1 == 1) p_MX1 else (1 - p_MX1)
   
-  # 3️⃣ Unconditional full-data risk
-  risk_full_unconditional <- mean(epsilon^2)
+  EY_X1X2_MX1 =
+    sum(Y_draws * weights) / sum(weights)
   
-  # 1️⃣ Full risk conditional on M=0
-  risk_full <- mean(epsilon[M == 0]^2)
+  ## --------------------------------------------------------------------------
+  ## 4. E(Y | X2, MX1)  (MC integration over X1 and Y)
+  ## --------------------------------------------------------------------------
+  if (compute_observed) {
+    X1_draws =
+      rnorm(B, mean = theta[["X1"]][["beta"]], sd = theta[["X1"]][["sigma"]])
+    
+    Y_draws2 =
+      rnorm(
+        B,
+        mean =
+          theta[["Y"]][["beta"]]["(Intercept)"] +
+          theta[["Y"]][["beta"]]["X1"] * X1_draws +
+          theta[["Y"]][["beta"]]["X2"] * X2,
+        sd = theta[["Y"]][["sigma"]]
+      )
+    
+    linpred2 =
+      beta_phi["(Intercept)"] +
+      beta_phi["X1"] * X1_draws +
+      beta_phi["X2"] * X2 +
+      beta_phi["Y"]  * Y_draws2
+    
+    p_MX1_2 = plogis(linpred2)
+    
+    weights2 =
+      if (MX1 == 1) p_MX1_2 else (1 - p_MX1_2)
+    
+    EY_X2_MX1 =
+      sum(Y_draws2 * weights2) / sum(weights2)
+  }
   
-  # 2️⃣ MU deployment risk
-  # Need E[Y | X2]
-  # Since X1 ⟂ X2 in your model:
-  # E[Y | X2] = beta0 + beta1 * E[X1] + beta2 * X2
+  ## --------------------------------------------------------------------------
+  ## Return
+  ## --------------------------------------------------------------------------
+  result = list("EY_X1X2"     = EY_X1X2,
+                "EY_X1X2_MX1" = EY_X1X2_MX1)
   
-  muY_X2 <- beta0 + beta1 * mu1 + beta2 * X2
+  if (compute_observed) {
+    result[["EY_X2"]] = EY_X2
+    result[["EY_X2_MX1"]] = EY_X2_MX1
+  }
+  return(result)
+}
+
+#' Compute oracle reference probabilities for a dataset
+#'
+#' Computes oracle conditional expectations of the outcome \code{Y} for each
+#' observation in a dataset, under the true data-generating and missingness
+#' mechanisms.
+#'
+#' @param dataset Data frame containing at least the variables \code{X1},
+#'   \code{X2}, and the missingness indicator \code{MX1}.
+#' @param theta List. Parameters of the joint data-generating model for
+#'   \code{X1}, \code{X2}, and \code{Y}.
+#' @param beta_phi Numeric vector. Coefficients of the logistic missingness model
+#'   for \code{MX1}, including the intercept.
+#' @param B Integer. Monte Carlo sample size used to approximate oracle
+#'   expectations for each observation. Defaults to 5,000.
+#' @param parallel Logical. Should computations be parallelized over
+#'   observations using the \pkg{future.apply} framework? Defaults to
+#'   \code{TRUE}.
+#'
+#' @return A data frame with one row per observation in \code{dataset} and the
+#' following columns:
+#' \describe{
+#'   \item{EY_X1X2}{Oracle value of \eqn{E(Y \mid X_1, X_2)}.}
+#'   \item{EY_X2}{Oracle value of \eqn{E(Y \mid X_2)}.}
+#'   \item{EY_X1X2MX1}{Oracle value of \eqn{E(Y \mid X_1, X_2, MX_1)}.}
+#'   \item{EY_X2MX1}{Oracle value of \eqn{E(Y \mid X_2, MX_1)}.}
+#' }
+#'
+#' @details
+#' Oracle quantities are computed observation-wise using Monte Carlo
+#' integration, by calling \code{oracle_reference_one()} for each row of the
+#' dataset. When \code{parallel = TRUE}, computations are parallelized across
+#' observations using \pkg{future.apply}.
+#'
+#' This function is intended for simulation studies and provides reference
+#' predictors that are not available in practice.
+#'
+#' @seealso \code{\link{oracle_reference_one}}
+compute_reference_probabilities = function(dataset,
+                                           theta,
+                                           beta_phi,
+                                           B = 5000,
+                                           parallel = TRUE,
+                                           compute_observed = TRUE) {
   
-  pred_MU <- ifelse(M == 0, muY_X, muY_X2)
+  ## Tests
+  check_data_frame(dataset, "dataset")
   
-  risk_obs <- mean((Y - pred_MU)^2)
+  required_vars = c("X1", "X2", "MX1")
+  if (!all(required_vars %in% names(dataset))) {
+    stop("`dataset` must contain X1, X2 and MX1.", call. = FALSE)
+  }
   
-  return(list(
-    risk_full = risk_full,
-    risk_obs = risk_obs,
-    risk_full_unconditional = risk_full_unconditional
-  ))
+  ## Parallel backend
+  if (parallel) {
+    if (!requireNamespace("future.apply", quietly = TRUE)) {
+      stop("Package `future.apply` is required for parallel computation.",
+           call. = FALSE)
+    }
+    future::plan(future::multisession)
+  } else {
+    future::plan(future::sequential)
+  }
+  
+  ## Oracle computation (parallelised over observations)
+  res =
+    future.apply::future_lapply(
+      seq_len(nrow(dataset)),
+      function(i) {
+        oracle_reference_one(
+          X1         = dataset[["X1"]][i],
+          X2         = dataset[["X2"]][i],
+          MX1        = dataset[["MX1"]][i],
+          theta      = theta,
+          beta_phi   = beta_phi,
+          B          = B,
+          compute_observed = compute_observed
+        )
+      },
+      future.seed = TRUE
+    )
+  
+  ## Assemble output
+  reference_probabilities =
+    as.data.frame(do.call(base::rbind, res))
+  
+  rownames(reference_probabilities) = NULL
+  
+  # BUGFIX: `oracle_reference_one()` inserts its results in the order
+  # EY_X1X2, EY_X1X2_MX1, EY_X2, EY_X2_MX1 (see that function's `result`
+  # list). The column_names vector below must match that insertion order;
+  # it previously listed EY_X2 before EY_X1X2MX1, which silently swapped
+  # the two middle columns after `do.call(rbind, res)`. In practice this
+  # meant every call with compute_observed = TRUE (the default, used by
+  # 01_simulation_main_analysis.R for the whole main/secondary analysis)
+  # returned a data frame where the column labelled "EY_X2" actually held
+  # EY_X1X2_MX1 values and the column labelled "EY_X1X2MX1" actually held
+  # EY_X2 values. Downstream, this corrupted refMU for incomplete cases,
+  # and refMC/refOMC (the "MC" oracle reference) entirely. Verified against
+  # an independent brute-force Monte Carlo re-implementation.
+  if (compute_observed) {
+    column_names = c("EY_X1X2",
+                     "EY_X1X2MX1",
+                     "EY_X2",
+                     "EY_X2MX1")
+  } else {
+    column_names = c("EY_X1X2",
+                     "EY_X1X2MX1")
+  }
+  colnames(reference_probabilities) = column_names
+  
+  return(reference_probabilities)
 }
