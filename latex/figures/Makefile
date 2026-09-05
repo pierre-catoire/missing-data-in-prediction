@@ -3,15 +3,17 @@ LATEX_OPTS := -interaction=nonstopmode -halt-on-error
 
 MAIN_OUT := ../../output/main/figures
 SEC_OUT  := ../../output/secondary/figures
+VALCONS_OUT := ../../output/validation_analysis_medium/figures
 
 MAIN_TEX := figure_main.tex
 SEC_TEX  := figure_secondary.tex
+VALCONS_TEX := figure_validation_consistency.tex
 
 # =================================================
 # Default target
 # =================================================
 
-all: main secondary
+all: main secondary validation_consistency
 
 # =================================================
 # MAIN FIGURES (9 figures)
@@ -161,11 +163,65 @@ $(SEC_OUT)/figure_secondary_msepomc.pdf: | $(SEC_OUT)
 	mv $(SEC_OUT)/figure_secondary.pdf $@
 
 # =================================================
+# VALIDATION CONSISTENCY FIGURES (4 figures)
+# =================================================
+
+validation_consistency: \
+	$(VALCONS_OUT)/figure_validation_consistency_mu.pdf \
+	$(VALCONS_OUT)/figure_validation_consistency_mc.pdf \
+	$(VALCONS_OUT)/figure_validation_consistency_mu_withy.pdf \
+	$(VALCONS_OUT)/figure_validation_consistency_mc_withy.pdf
+
+$(VALCONS_OUT):
+	mkdir -p $(VALCONS_OUT)
+
+$(VALCONS_OUT)/figure_validation_consistency_mu.pdf: | $(VALCONS_OUT)
+	$(ENGINE) $(LATEX_OPTS) -output-directory=$(VALCONS_OUT) "\
+\def\family{mu}\
+\def\variant{ordinary}\
+\def\YMIN{0.9}\
+\def\YMAX{2.75}\
+\def\YLABEL{{Risk (MU target)}}\
+\input{$(VALCONS_TEX)}"
+	mv $(VALCONS_OUT)/figure_validation_consistency.pdf $@
+
+$(VALCONS_OUT)/figure_validation_consistency_mc.pdf: | $(VALCONS_OUT)
+	$(ENGINE) $(LATEX_OPTS) -output-directory=$(VALCONS_OUT) "\
+\def\family{mc}\
+\def\variant{ordinary}\
+\def\YMIN{0.7}\
+\def\YMAX{2.6}\
+\def\YLABEL{{Risk (MC target)}}\
+\input{$(VALCONS_TEX)}"
+	mv $(VALCONS_OUT)/figure_validation_consistency.pdf $@
+
+$(VALCONS_OUT)/figure_validation_consistency_mu_withy.pdf: | $(VALCONS_OUT)
+	$(ENGINE) $(LATEX_OPTS) -output-directory=$(VALCONS_OUT) "\
+\def\family{mu}\
+\def\variant{withy}\
+\def\YMIN{0.7}\
+\def\YMAX{1.75}\
+\def\YLABEL{{Risk (MU target, outcome included)}}\
+\input{$(VALCONS_TEX)}"
+	mv $(VALCONS_OUT)/figure_validation_consistency.pdf $@
+
+$(VALCONS_OUT)/figure_validation_consistency_mc_withy.pdf: | $(VALCONS_OUT)
+	$(ENGINE) $(LATEX_OPTS) -output-directory=$(VALCONS_OUT) "\
+\def\family{mc}\
+\def\variant{withy}\
+\def\YMIN{0.65}\
+\def\YMAX{2.7}\
+\def\YLABEL{{Risk (MC target, outcome included)}}\
+\input{$(VALCONS_TEX)}"
+	mv $(VALCONS_OUT)/figure_validation_consistency.pdf $@
+
+# =================================================
 # Cleanup
 # =================================================
 
 clean:
 	rm -f $(MAIN_OUT)/*.aux $(MAIN_OUT)/*.log
 	rm -f $(SEC_OUT)/*.aux $(SEC_OUT)/*.log
+	rm -f $(VALCONS_OUT)/*.aux $(VALCONS_OUT)/*.log
 
-.PHONY: all main secondary clean
+.PHONY: all main secondary validation_consistency cleanPHONY: all main secondary clean

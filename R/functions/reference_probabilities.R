@@ -208,10 +208,22 @@ compute_reference_probabilities = function(dataset,
   
   rownames(reference_probabilities) = NULL
   
+  # BUGFIX: `oracle_reference_one()` inserts its results in the order
+  # EY_X1X2, EY_X1X2_MX1, EY_X2, EY_X2_MX1 (see that function's `result`
+  # list). The column_names vector below must match that insertion order;
+  # it previously listed EY_X2 before EY_X1X2MX1, which silently swapped
+  # the two middle columns after `do.call(rbind, res)`. In practice this
+  # meant every call with compute_observed = TRUE (the default, used by
+  # 01_simulation_main_analysis.R for the whole main/secondary analysis)
+  # returned a data frame where the column labelled "EY_X2" actually held
+  # EY_X1X2_MX1 values and the column labelled "EY_X1X2MX1" actually held
+  # EY_X2 values. Downstream, this corrupted refMU for incomplete cases,
+  # and refMC/refOMC (the "MC" oracle reference) entirely. Verified against
+  # an independent brute-force Monte Carlo re-implementation.
   if (compute_observed) {
     column_names = c("EY_X1X2",
-                     "EY_X2",
                      "EY_X1X2MX1",
+                     "EY_X2",
                      "EY_X2MX1")
   } else {
     column_names = c("EY_X1X2",
