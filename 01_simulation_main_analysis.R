@@ -12,7 +12,7 @@
 ## object is reloaded from disk instead; only the (cheap) performance
 ## evaluation is redone, so scenario_tables stays complete regardless of how
 ## many restarts happened. This mirrors the resume logic already used in
-## 05_validation_analysis.R. The process can therefore safely be killed and
+## 04_validation_analysis.R. The process can therefore safely be killed and
 ## restarted with the same script: only the point actually being computed at
 ## the moment of interruption is ever at risk of being redone.
 ################################################################################

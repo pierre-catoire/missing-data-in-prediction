@@ -3,17 +3,18 @@ LATEX_OPTS := -interaction=nonstopmode -halt-on-error
 
 MAIN_OUT := ../../output/main/figures
 SEC_OUT  := ../../output/secondary/figures
-VALCONS_OUT := ../../output/validation_analysis_medium/figures
+VALCONS_OUT := ../../output/validation_analysis/figures
 
 MAIN_TEX := figure_main.tex
 SEC_TEX  := figure_secondary.tex
 VALCONS_TEX := figure_validation_consistency.tex
+THEO_TEX := figure_theoretical_risks.tex
 
 # =================================================
 # Default target
 # =================================================
 
-all: main secondary validation_consistency
+all: main secondary theoretical_risks validation_consistency
 
 # =================================================
 # MAIN FIGURES (9 figures)
@@ -163,6 +164,20 @@ $(SEC_OUT)/figure_secondary_msepomc.pdf: | $(SEC_OUT)
 	mv $(SEC_OUT)/figure_secondary.pdf $@
 
 # =================================================
+# THEORETICAL TARGET RISKS (1 figure: MU/MC x OP/CP/full, all 5 scenarios)
+# =================================================
+
+theoretical_risks: \
+	$(VALCONS_OUT)/figure_theoretical_risks.pdf
+
+$(VALCONS_OUT)/figure_theoretical_risks.pdf: | $(VALCONS_OUT)
+	$(ENGINE) $(LATEX_OPTS) -output-directory=$(VALCONS_OUT) "\
+\def\YMIN{0.5}\
+\def\YMAX{3}\
+\def\YLABEL{{Bayes target risk}}\
+\input{$(THEO_TEX)}"
+
+# =================================================
 # VALIDATION CONSISTENCY FIGURES (4 figures)
 # =================================================
 
@@ -224,4 +239,4 @@ clean:
 	rm -f $(SEC_OUT)/*.aux $(SEC_OUT)/*.log
 	rm -f $(VALCONS_OUT)/*.aux $(VALCONS_OUT)/*.log
 
-.PHONY: all main secondary validation_consistency cleanPHONY: all main secondary clean
+.PHONY: all main secondary theoretical_risks validation_consistency clean

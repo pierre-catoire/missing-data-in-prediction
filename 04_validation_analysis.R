@@ -1,5 +1,5 @@
 ################################################################################
-## 05. Validation analysis
+## 04. Validation analysis
 ##
 ## Fresh (not based on 04_validation.R, which is outdated) analysis of:
 ##   (1) the six theoretical risks (MU/MC x op/cp/full) as a function of the
@@ -55,7 +55,6 @@ source("R/functions/reference_probabilities.R")
 source("R/functions/performance_metrics.R")
 source("R/functions/validation_functions.R")
 source("R/functions/validation_analysis.R")
-source("R/functions/plotting_functions.R")
 source("R/functions/latex_export.R")
 source("R/config/config.R")
 
@@ -136,10 +135,8 @@ out_dir = switch(run_mode,
                  full   = "output/validation_analysis")
 out_raw    = file.path(out_dir, "raw")
 out_tables = file.path(out_dir, "tables")
-out_figs   = file.path(out_dir, "figures")
 dir.create(out_raw,    recursive = TRUE, showWarnings = FALSE)
 dir.create(out_tables, recursive = TRUE, showWarnings = FALSE)
-dir.create(out_figs,   recursive = TRUE, showWarnings = FALSE)
 
 theo_path = file.path(out_raw, "theoretical_risks.rds")
 mu_path   = file.path(out_raw, "empirical_validation_mu.rds")
@@ -225,8 +222,8 @@ if (file.exists(theo_path) && file.exists(mu_path) && file.exists(mc_path)) {
 #'
 #' Called periodically during the main loop (checkpointing) and once more
 #' after it finishes. Writes the combined raw .rds and .csv tables, and the
-#' pgfplots-ready per-scenario CSVs, but does NOT redraw the (slower) PNG
-#' figures -- those are only redrawn at the very end, via `make_figures()`.
+#' pgfplots-ready per-scenario CSVs that the LaTeX figures (built separately
+#' via `make -C latex/figures`) read.
 #'
 #' @return Invisibly returns a list with the three combined data frames
 #'   (\code{theoretical_df}, \code{mu_df}, \code{mc_df}), so the caller can
@@ -341,7 +338,7 @@ log_step(sprintf("Main loop finished in %s | %d new points computed this run",
                  new_point_i))
 
 ## =============================================================================
-## 5. Final save + figures
+## 5. Final save (LaTeX figures are built separately, via `make -C latex/figures`)
 ## =============================================================================
 
 log_step("Saving final results tables...")
@@ -350,19 +347,7 @@ combined = save_progress()
 log_step(sprintf("Total rows: %d theoretical | %d MU | %d MC",
                  nrow(combined$theoretical_df), nrow(combined$mu_df), nrow(combined$mc_df)))
 
-log_step("Building figures...")
-
-plot_theoretical_risks(combined$theoretical_df, file = file.path(out_figs, "theoretical_risks.png"))
-plot_validation_consistency(combined$theoretical_df, combined$mu_df, family = "mu",
-                            file = file.path(out_figs, "validation_consistency_mu.png"))
-plot_validation_consistency(combined$theoretical_df, combined$mc_df, family = "mc",
-                            file = file.path(out_figs, "validation_consistency_mc.png"))
-
-if (include_outcome_variant) {
-  plot_validation_consistency_withY(combined$theoretical_df, combined$mu_df, family = "mu",
-                                    file = file.path(out_figs, "validation_consistency_mu_withy.png"))
-  plot_validation_consistency_withY(combined$theoretical_df, combined$mc_df, family = "mc",
-                                    file = file.path(out_figs, "validation_consistency_mc_withy.png"))
-}
-
-log_step(sprintf("Done. Outputs written under %s (raw/, tables/, figures/).", out_dir))
+log_step(sprintf(
+  "Done. Outputs written under %s (raw/, tables/). Build the LaTeX figures separately with `make -C latex/figures`.",
+  out_dir
+))

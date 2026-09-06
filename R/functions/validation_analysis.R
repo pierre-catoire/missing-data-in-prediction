@@ -42,15 +42,18 @@
 ##     whether a departure from the theoretical CP risk originates from the
 ##     training procedure or from the validation procedure itself.
 ##   - optionally (when include_outcome_variant = TRUE), the same RP/PP
-##     quantities recomputed with the validation-time imputation model (both
-##     optimal and estimated) also given the true outcome Y -- illustrative
-##     only, never deployment-realistic. This variant keeps the *fitted*
-##     prediction function throughout for both its optimal and estimated
-##     imputation conditions: it tests a different proposition (whether
-##     including the outcome in the validation-time imputation model
-##     recovers the full risk, for ANY fixed CP predictor under test -- see
-##     Section on "Inclusion of the outcome"), not one specific to the oracle
-##     predictor, so there is no oracle-prediction endpoint to add here.
+##     quantities recomputed with the validation-time imputation model also
+##     given the true outcome Y -- illustrative only, never deployment-
+##     realistic. This variant uses the SAME oracle/fitted split as the
+##     ordinary (Y-free) RP/PP above: "optimal_withY" pairs the oracle
+##     prediction function with the oracle (true-distribution) with-Y
+##     imputation model, and "estimated_withY" pairs the fitted prediction
+##     function with the mice-fitted with-Y imputation model. This tests the
+##     proposition that risk pooling with outcome-inclusive imputation
+##     recovers the full risk of the prediction function under test (see
+##     Section on "Inclusion of the outcome") for each of these two fixed
+##     predictors, mirroring the "fully idealised" vs "fully realistic"
+##     framing used throughout this file.
 ################################################################################
 
 #' Fit a linear outcome model via multiple imputation and Rubin's pooling
@@ -337,9 +340,9 @@ compute_ccval = function(coef, data_test) {
 #' @param K,B_inner SIR parameters forwarded to the "optimal" MC sampler.
 #' @param include_outcome_variant Logical. If \code{TRUE}, also compute the
 #'   four "_withY" risk-/predictions-pooling columns (illustrative-only
-#'   validation-time imputation that is also given the true outcome Y, kept
-#'   on the fitted prediction function throughout -- see the file-level
-#'   comment above). Defaults to \code{FALSE}.
+#'   validation-time imputation that is also given the true outcome Y, using
+#'   the same oracle/fitted split as the ordinary columns -- see the
+#'   file-level comment above). Defaults to \code{FALSE}.
 #' @param verbose Logical. Print progress via \code{log_step()}.
 #'
 #' @return A one-row data frame with columns \code{scenario},
@@ -434,9 +437,12 @@ validate_one_point = function(simulation_object, family = c("mu", "mc"),
       theta = theta, beta_phi = beta_phi, K = K, B_inner = B_inner, verbose = verbose
     )
 
-    ## Fitted prediction function throughout -- see file-level comment.
+    ## Same oracle/fitted split as the ordinary RP/PP above -- see file-level
+    ## comment: fitted prediction / estimated (mice-fit) with-Y imputation is
+    ## the realistic combination; oracle prediction / optimal (true-
+    ## distribution) with-Y imputation is the idealised one.
     rp_pp_estimated_withY = compute_rp_pp(coef_fitted, imputed_estimated_withY, y_true)
-    rp_pp_optimal_withY   = compute_rp_pp(coef_fitted, imputed_optimal_withY, y_true)
+    rp_pp_optimal_withY   = compute_rp_pp(oracle_coef, imputed_optimal_withY, y_true)
 
     result$riskPooling_optimal_withY          = rp_pp_optimal_withY$rp
     result$predictionsPooling_optimal_withY   = rp_pp_optimal_withY$pp

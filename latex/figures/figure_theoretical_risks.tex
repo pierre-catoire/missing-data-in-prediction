@@ -3,11 +3,9 @@
 % =========================
 % Parameters (overridden externally)
 % =========================
-\providecommand{\family}{mu}    % mu / mc
-\providecommand{\variant}{ordinary}  % ordinary / withy
-\providecommand{\YMIN}{0.9}
-\providecommand{\YMAX}{2.75}
-\providecommand{\YLABEL}{Validation risk}
+\providecommand{\YMIN}{0.5}
+\providecommand{\YMAX}{3}
+\providecommand{\YLABEL}{Bayes target risk}
 
 \usepackage{pgfplots}
 \usepgfplotslibrary{groupplots}
@@ -53,27 +51,11 @@
 }
 
 % =========================
-% Color palette (semantic)
+% Color palette: MU family vs MC family (same hues as the R diagnostic
+% plot's .theoretical_style, plotting_functions.R), OP/CP/full by line style
 % =========================
-
-% Blues -- optimal validation-time imputation model
-\definecolor{rpopt}{RGB}{25,50,150}
-\definecolor{ppopt}{RGB}{100,149,237}
-
-% Oranges -- estimated (mice-fitted) validation-time imputation model
-\definecolor{rpest}{RGB}{204,85,0}
-\definecolor{ppest}{RGB}{255,178,102}
-
-% Greens -- complete-case validation
-\definecolor{ccvfit}{RGB}{34,139,34}
-\definecolor{ccvopt}{RGB}{144,238,144}
-
-% Neutral tones -- theoretical target risks (dashed, loess only)
-\definecolor{refop}{RGB}{90,90,90}
-\definecolor{refcp}{RGB}{139,0,139}
-\definecolor{reffull}{RGB}{0,0,0}
-
-\def\withyword{withy}
+\definecolor{mucol}{RGB}{27,158,119}
+\definecolor{mccol}{RGB}{217,95,2}
 
 \begin{document}
 
@@ -103,62 +85,47 @@
 % =================================================
 \nextgroupplot[
   title={Scenario 1},
-  legend to name=legendValidationConsistency,
+  legend to name=legendTheoreticalRisks,
   legend style={draw=none}
 ]
 
 \def\scenario{M1}
-\input{figure_scenario_validation_consistency.tex}
+\input{figure_scenario_theoretical_risks.tex}
 
-\ifx\variant\withyword
-  \addlegendentry{Risk pooling (oracle prediction, optimal imputation, outcome included)}
-  \addlegendentry{Predictions pooling (oracle prediction, optimal imputation, outcome included)}
-  \addlegendentry{Risk pooling (fitted prediction, estimated imputation, outcome included)}
-  \addlegendentry{Predictions pooling (fitted prediction, estimated imputation, outcome included)}
-  \addlegendentry{Complete-case validation (fitted model)}
-  \addlegendentry{Complete-case validation (oracle model)}
-  \addlegendentry{Theoretical OP risk}
-  \addlegendentry{Theoretical CP risk}
-  \addlegendentry{Theoretical full risk}
-\else
-  \addlegendentry{Risk pooling (oracle prediction, optimal imputation)}
-  \addlegendentry{Predictions pooling (oracle prediction, optimal imputation)}
-  \addlegendentry{Risk pooling (fitted prediction, estimated imputation)}
-  \addlegendentry{Predictions pooling (fitted prediction, estimated imputation)}
-  \addlegendentry{Complete-case validation (fitted model)}
-  \addlegendentry{Complete-case validation (oracle model)}
-  \addlegendentry{Theoretical OP risk}
-  \addlegendentry{Theoretical CP risk}
-  \addlegendentry{Theoretical full risk}
-\fi
+\addlegendentry{MU -- OP risk}
+\addlegendentry{MU -- CP risk}
+\addlegendentry{MU -- full risk}
+\addlegendentry{MC -- OP risk}
+\addlegendentry{MC -- CP risk}
+\addlegendentry{MC -- full risk}
 
 % =================================================
 % Scenario 2
 % =================================================
 \nextgroupplot[title={Scenario 2}]
 \def\scenario{M2}
-\input{figure_scenario_validation_consistency.tex}
+\input{figure_scenario_theoretical_risks.tex}
 
 % =================================================
 % Scenario 3
 % =================================================
 \nextgroupplot[title={Scenario 3}]
 \def\scenario{M3}
-\input{figure_scenario_validation_consistency.tex}
+\input{figure_scenario_theoretical_risks.tex}
 
 % =================================================
 % Scenario 4
 % =================================================
 \nextgroupplot[title={Scenario 4}]
 \def\scenario{M4}
-\input{figure_scenario_validation_consistency.tex}
+\input{figure_scenario_theoretical_risks.tex}
 
 % =================================================
 % Scenario 5
 % =================================================
 \nextgroupplot[title={Scenario 5}]
 \def\scenario{M5}
-\input{figure_scenario_validation_consistency.tex}
+\input{figure_scenario_theoretical_risks.tex}
 
 \end{groupplot}
 
@@ -167,7 +134,7 @@
 % =================================================
 \node[anchor=center]
   at ([xshift=4.5cm,yshift=-3.1cm]current bounding box.north west)
-  {\pgfplotslegendfromname{legendValidationConsistency}};
+  {\pgfplotslegendfromname{legendTheoreticalRisks}};
 
 \end{tikzpicture}
 

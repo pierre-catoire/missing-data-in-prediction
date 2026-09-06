@@ -168,7 +168,15 @@ write_validation_consistency_latex_tables = function(theoretical_df, empirical_d
 #' and \code{<scenario>_<family>_withy_loess.csv} under \code{out_dir}. The
 #' points file has columns \code{observedmissingness},
 #' \code{riskpoolingoptimalwithy}, \code{predictionspoolingoptimalwithy},
-#' \code{riskpoolingestimatedwithy}, \code{predictionspoolingestimatedwithy}.
+#' \code{riskpoolingestimatedwithy}, \code{predictionspoolingestimatedwithy},
+#' \code{ccvalfitted}, \code{ccvaloptimal} -- the last two are the same
+#' complete-case-validation quantities as in
+#' \code{write_validation_consistency_latex_tables()} (CCVal does not
+#' involve imputation, so it does not have a separate "withY" version;
+#' \code{validate_one_point()} always populates \code{ccval_fitted}/
+#' \code{ccval_optimal} regardless of \code{include_outcome_variant}), and
+#' are duplicated into this file so the withY figure has a CCVal baseline
+#' to compare against without needing to also read the ordinary file.
 #' The loess file adds the same three theoretical reference columns as
 #' \code{write_validation_consistency_latex_tables()} (\code{riskop},
 #' \code{riskcp}, \code{riskfull}), so the two figures (with/without Y in
@@ -192,9 +200,11 @@ write_validation_consistency_withY_latex_tables = function(theoretical_df, empir
   check_data_frame_path(out_dir)
 
   emp_cols = c("riskPooling_optimal_withY", "predictionsPooling_optimal_withY",
-              "riskPooling_estimated_withY", "predictionsPooling_estimated_withY")
+              "riskPooling_estimated_withY", "predictionsPooling_estimated_withY",
+              "ccval_fitted", "ccval_optimal")
   emp_out_names = c("riskpoolingoptimalwithy", "predictionspoolingoptimalwithy",
-                    "riskpoolingestimatedwithy", "predictionspoolingestimatedwithy")
+                    "riskpoolingestimatedwithy", "predictionspoolingestimatedwithy",
+                    "ccvalfitted", "ccvaloptimal")
 
   theo_cols = paste0("risk_", family, "_", c("op", "cp", "full"))
   theo_out_names = c("riskop", "riskcp", "riskfull")

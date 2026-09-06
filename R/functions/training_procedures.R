@@ -11,56 +11,71 @@
 #' @param newdata Data frame containing covariates and missingness indicators
 #'   required for prediction.
 #' @param procedure_id Character scalar identifying the training procedure to
-#'   be used. Supported values include 
-#'   \begin{itemize}
+#'   be used. Supported values are:
+#' \itemize{
 #'   \item \code{"ps"}: Pattern Submodels
-#'   \item \code{"ccs"}: Complete Cases Submdodels
-#'   \item \code{"mle"}: Maximum Likelihood Estimation (using 
-#'   Expectation-Maximisation), with marginalisation of the missing predictors
-#'   \item \code{"mlemi"}: Maximum Likelihood Estimation (using 
-#'   Expectation-Maximisation), with marginalisation of the missing predictors,
-#'   including missingness indicators
-#'   \code{mi}: Multiple imputation
-#'   \code{mimi}: Multiple imputation with missingness indicators
+#'   \item \code{"ccs"}: Complete Case Submodels
+#'   \item \code{"mle"}: Maximum Likelihood Estimation (using
+#'     Expectation-Maximisation), with marginalisation of the missing
+#'     predictors
+#'   \item \code{"mlemi"}: Maximum Likelihood Estimation (using
+#'     Expectation-Maximisation), with marginalisation of the missing
+#'     predictors, including missingness indicators
+#'   \item \code{"mi"}: Multiple imputation
+#'   \item \code{"mimi"}: Multiple imputation with missingness indicators
+#' }
+#'
+#' @return A numeric vector of predictions, with length equal to the number
+#'   of rows in \code{newdata}.
 predict_Y = function(object,
                      newdata,
                      procedure_id) {
   check_data_frame(newdata, "newdata")
   check_character_value(procedure_id, "procedure_id")
-  
+
+  # BUGFIX: every branch below used to reference a variable named
+  # `prediction_function` instead of this function's own `object` argument.
+  # `prediction_function` isn't a parameter or a local of predict_Y() -- it
+  # was silently picked up from the global environment, where it happened to
+  # exist only because 01_simulation_main_analysis.R's calling loop assigns a
+  # global of that exact name immediately before every call to predict_Y().
+  # That made the bug invisible (the global always held the same value that
+  # should have been passed as `object`), but it was a landmine: calling
+  # predict_Y() from anywhere else, or refactoring that loop, would silently
+  # use a missing or stale value instead of the model actually passed in.
   switch(
     procedure_id,
-    
+
     "ps"  = predict_submodels(
-      submodels = prediction_function,
+      submodels = object,
       newdata = newdata
     ),
-    
+
     "ccs" = predict_submodels(
-      submodels = prediction_function,
+      submodels = object,
       newdata = newdata
     ),
-    
+
     "mle" = predict_mle(
-      mle_parameters = prediction_function,
+      mle_parameters = object,
       newdata = newdata
     ),
-    
+
     "mlemi" = predict_mlemi(
-      mle_parameters = prediction_function,
+      mle_parameters = object,
       newdata = newdata
     ),
-    
+
     "mi" = predict_mi(
-      mi_model = prediction_function,
+      mi_model = object,
       newdata = newdata
     ),
-    
+
     "mimi" = predict_mimi(
-      mimi_model = prediction_function,
+      mimi_model = object,
       newdata = newdata
     ),
-    
+
     stop(sprintf(
       "Unknown procedure_id `%s`.", procedure_id
     ), call. = FALSE)
@@ -592,8 +607,15 @@ train_mimi = function(dataset, m = 5, method = "norm") {
   
   for(impSet in 1:m){
     if(any(idx1)){
+      # BUGFIX: this used to fit X1 ~ X2 on complete(imp,impSet)[idx1,], i.e.
+      # on the rows where X1 WAS missing at training, using mice's own
+      # imputed values as if they were data. That taught impModel mice's
+      # imputation model back to itself instead of the genuine X1-X2
+      # relationship. impModel is meant to impute X1 for *new* data at
+      # prediction time, so it must be fit on the rows where X1 was actually
+      # observed at training (!idx1), using their real X1 values.
       result[["impModel"]][[impSet]] = lm(formula("X1 ~ X2"),
-                                          data = complete(imp,impSet)[idx1,])
+                                          data = complete(imp,impSet)[!idx1,])
     }else{
       result[["impModel"]][[impSet]] = NULL
     }

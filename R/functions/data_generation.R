@@ -62,38 +62,56 @@ simulate_data = function (train_size,
   # Tests
   check_numeric_value(train_size,"train_size")
   check_numeric_value(test_size,"test_size")
-  if(!(scenario %in% missingness_scenarios)){stop("`scenario` is invalid.")}
+  # BUGFIX: this used to check `scenario %in% missingness_scenarios`, but
+  # `scenario` is not a parameter of simulate_data() -- it isn't defined
+  # anywhere in this function. It only ever "worked" because every current
+  # caller (01_simulation_main_analysis.R's loop) happens to have a global
+  # variable named `scenario` in scope when it calls simulate_data(); the
+  # check silently fell through to that global via R's lexical scoping. That
+  # made simulate_data() fragile (calling it without such a global in scope
+  # -- including its own @examples above, which don't define one -- errors
+  # with "object 'scenario' not found" instead of running) and the check
+  # itself never validated anything this function actually receives as an
+  # argument. Removed rather than "fixed", since there is no `scenario`
+  # input here to validate in the first place.
   check_numeric_value(missingness_target_X1,"missingness_target_X1")
   check_value_bounds(missingness_target_X1,
                      "missingness_target_X1",
                      c(0,1))
-  check_numeric_value(missingness_target_Y)
+  check_numeric_value(missingness_target_Y,"missingness_target_Y")
   check_value_bounds(missingness_target_Y,
                      "missingness_target_Y",
                      c(0,1))
-  
+
   # Function body
-  
+
   result = list("train" = NULL,
                 "test" = NULL)
   size = list("train" = train_size,
               "test"  = test_size)
-  
+
   ## Generate variables X1, X2, Y
   for (set in names(result)){
-    X1 = rnorm(train_size,
+    # BUGFIX: X1/X2/Y used to always be generated with length `train_size`
+    # regardless of `set`, while MX1/MY correctly used `size[[set]]`. This
+    # was invisible as long as train_size == test_size (as in the current
+    # config.R), but would silently break (recycling/length-mismatch) the
+    # moment the two differ, despite this function's own documentation
+    # explicitly supporting that case.
+    n = size[[set]]
+    X1 = rnorm(n,
                theta[["X1"]][["beta"]],
                theta[["X1"]][["sigma"]])
-    X2 = rnorm(train_size,
+    X2 = rnorm(n,
                theta[["X2"]][["beta"]],
                theta[["X2"]][["sigma"]])
-    Y  = drop(base::cbind(1,X1,X2) %*% theta[["Y"]][["beta"]]) + 
-      rnorm(train_size,0,theta[["Y"]][["sigma"]])
-    
+    Y  = drop(base::cbind(1,X1,X2) %*% theta[["Y"]][["beta"]]) +
+      rnorm(n,0,theta[["Y"]][["sigma"]])
+
     # Generate missingness indicators
     eta_MX1 = (1+exp(-base::cbind(1,X1,X2,Y) %*% beta_phi))^-1
-    MX1 = ifelse(runif(size[[set]]) > eta_MX1, 0, 1)
-    MY = ifelse(runif(size[[set]]) > missingness_target_Y, 0, 1)
+    MX1 = ifelse(runif(n) > eta_MX1, 0, 1)
+    MY = ifelse(runif(n) > missingness_target_Y, 0, 1)
     result[[set]] = data.frame(X1,X2,Y,MX1,MY)
   }
   return(result)

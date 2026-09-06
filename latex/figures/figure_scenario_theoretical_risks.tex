@@ -1,0 +1,126 @@
+% =================================================
+% One theoretical-target-risks scenario body
+% Requires:
+%   \scenario
+%   \tabledir
+%   mucol, mccol defined upstream
+% =================================================
+
+\edef\pointsfile{\tabledir/\scenario_theoretical_points.csv}
+\edef\loessfile{\tabledir/\scenario_theoretical_loess.csv}
+
+% ---- MU risks (solid = OP, dashed = CP, dotted = full) ----
+\addplot[mucol, solid, points, forget plot]
+table[
+  col sep=comma,
+  ignore chars={"},
+  restrict y to domain=0:5,
+  unbounded coords=discard,
+  x=observedmissingness,
+  y=riskmuop
+]{\pointsfile};
+
+\addplot[mucol, solid, loess]
+table[
+  col sep=comma,
+  ignore chars={"},
+  restrict y to domain=0:5,
+  unbounded coords=discard,
+  y=riskmuop
+]{\loessfile};
+
+\addplot[mucol, dashed, points, forget plot]
+table[
+  col sep=comma,
+  ignore chars={"},
+  restrict y to domain=0:5,
+  unbounded coords=discard,
+  x=observedmissingness,
+  y=riskmucp
+]{\pointsfile};
+
+\addplot[mucol, dashed, loess]
+table[
+  col sep=comma,
+  ignore chars={"},
+  restrict y to domain=0:5,
+  unbounded coords=discard,
+  y=riskmucp
+]{\loessfile};
+
+\addplot[mucol, dotted, points, forget plot]
+table[
+  col sep=comma,
+  ignore chars={"},
+  restrict y to domain=0:5,
+  unbounded coords=discard,
+  x=observedmissingness,
+  y=riskmufull
+]{\pointsfile};
+
+\addplot[mucol, dotted, loess]
+table[
+  col sep=comma,
+  ignore chars={"},
+  restrict y to domain=0:5,
+  unbounded coords=discard,
+  y=riskmufull
+]{\loessfile};
+
+% ---- MC risks (solid = OP, dashed = CP, dotted = full) ----
+\addplot[mccol, solid, points, forget plot]
+table[
+  col sep=comma,
+  ignore chars={"},
+  restrict y to domain=0:5,
+  unbounded coords=discard,
+  x=observedmissingness,
+  y=riskmcop
+]{\pointsfile};
+
+\addplot[mccol, solid, loess]
+table[
+  col sep=comma,
+  ignore chars={"},
+  restrict y to domain=0:5,
+  unbounded coords=discard,
+  y=riskmcop
+]{\loessfile};
+
+\addplot[mccol, dashed, points, forget plot]
+table[
+  col sep=comma,
+  ignore chars={"},
+  restrict y to domain=0:5,
+  unbounded coords=discard,
+  x=observedmissingness,
+  y=riskmccp
+]{\pointsfile};
+
+\addplot[mccol, dashed, loess]
+table[
+  col sep=comma,
+  ignore chars={"},
+  restrict y to domain=0:5,
+  unbounded coords=discard,
+  y=riskmccp
+]{\loessfile};
+
+\addplot[mccol, dotted, points, forget plot]
+table[
+  col sep=comma,
+  ignore chars={"},
+  restrict y to domain=0:5,
+  unbounded coords=discard,
+  x=observedmissingness,
+  y=riskmcfull
+]{\pointsfile};
+
+\addplot[mccol, dotted, loess]
+table[
+  col sep=comma,
+  ignore chars={"},
+  restrict y to domain=0:5,
+  unbounded coords=discard,
+  y=riskmcfull
+]{\loessfile};

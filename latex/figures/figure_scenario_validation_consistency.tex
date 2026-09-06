@@ -95,6 +95,49 @@
     y=predictionspoolingestimatedwithy
   ]{\loessfile};
 
+  % ---- Complete-case validation, fitted model ----
+  % (CCVal does not involve imputation, so it is identical to the ordinary
+  % branch's CCVal; the withy points/loess files carry the same
+  % ccvalfitted/ccvaloptimal columns so this branch is self-contained.)
+  \addplot[ccvfit, points, forget plot]
+  table[
+    col sep=comma,
+    ignore chars={"},
+    restrict y to domain=0:5,
+    unbounded coords=discard,
+    x=observedmissingness,
+    y=ccvalfitted
+  ]{\pointsfile};
+
+  \addplot[ccvfit, loess]
+  table[
+    col sep=comma,
+    ignore chars={"},
+    restrict y to domain=0:5,
+    unbounded coords=discard,
+    y=ccvalfitted
+  ]{\loessfile};
+
+  % ---- Complete-case validation, oracle model ----
+  \addplot[ccvopt, points, forget plot]
+  table[
+    col sep=comma,
+    ignore chars={"},
+    restrict y to domain=0:5,
+    unbounded coords=discard,
+    x=observedmissingness,
+    y=ccvaloptimal
+  ]{\pointsfile};
+
+  \addplot[ccvopt, loess]
+  table[
+    col sep=comma,
+    ignore chars={"},
+    restrict y to domain=0:5,
+    unbounded coords=discard,
+    y=ccvaloptimal
+  ]{\loessfile};
+
 \else
 
   \edef\pointsfile{\tabledir/\scenario_\family_points.csv}
