@@ -2,12 +2,30 @@
 ## Validation analysis: fresh, minimal fitting/prediction/pooling machinery
 ##
 ## This file deliberately does NOT reuse train_mi()/train_mimi() from
-## training_procedures.R: those carry unneeded baggage for this analysis and
-## train_mimi() in particular has a known bug (its imputation model for X1 is
-## fit on already-mice-imputed rows instead of the observed ones). Instead,
+## training_procedures.R: those carry unneeded baggage for this analysis
+## (pattern-augmented prediction models, missingness-indicator bookkeeping,
+## etc. that the RP/PP/CCV machinery here doesn't need). Instead,
 ## fit_linear_mi() below is a fresh, minimal MI-then-pool implementation used
 ## for both the MU (Y ~ X1 + X2) and MC (Y ~ X1 + X2 + MX1) substantive
 ## models.
+##
+## CORRECTION (2026-09-13): an earlier version of this comment claimed
+## train_mimi() had a bug in that its impModel (used to impute X1 for new
+## data at deployment) was "fit on already-mice-imputed rows instead of the
+## observed ones", implying the observed-rows fit was the correct one. That
+## claim was backwards and has been fixed in training_procedures.R: fitting
+## impModel on the observed rows (MX1==0) targets E[X1|X2,MX1=0], which only
+## equals the needed E[X1|X2,MX1=1] under MAR-X -- a condition this thesis's
+## own M3-M5 scenarios violate. Fitting on the completed MX1==1 rows instead
+## (mice's posterior draws, informed by each row's own X2 and Y) targets the
+## right quantity under the much weaker MARXYO, matching Prop. 6.6. Verified
+## empirically against real M1/M3/M4/M5 grid points from output/main/raw/.
+## This does not affect the "estimated" imputation branch of
+## build_imputed_test_sets() below, which is deliberately fit on the
+## complete-case (MX1==0) subset of the *training* set only -- that mirrors
+## what a real deployment can do (no Y-informed mice posterior is available
+## for held-out validation data), and its own MAR-X requirement is already
+## documented as such in Chapter 11's remark on Prop. 11.3.
 ##
 ## Together with the samplers in validation_functions.R
 ## (sample_x1_mu/sample_x1_mc, and their "_y" outcome-conditional
@@ -123,9 +141,7 @@ fit_linear_mi = function(data, formula, variables,
 #' by building the model matrix implied by the non-intercept term names.
 #'
 #' @param coef Named numeric vector of coefficients, as returned by
-#'   \code{fit_linear_mi()} (or an oracle coefficient vector built from the
-#'   true \code{theta$Y$beta} for a Bayes-optimal predictor -- see
-#'   \code{oracle_coef_for_family()}).
+#'   \code{fit_linear_mi()}.
 #' @param newdata Data frame containing the columns named in \code{coef}
 #'   (other than \code{"(Intercept)"}).
 #'
@@ -137,28 +153,83 @@ predict_linear = function(coef, newdata) {
   as.vector(X %*% coef[colnames(X)])
 }
 
-#' Bayes-optimal (oracle) coefficient vector for the MU or MC target
+#' Bayes-optimal (oracle) prediction function for the MU or MC target
 #'
-#' Under the data-generating model in \code{theta}, the missingness
-#' indicator MX1 has no direct effect on Y given (X1, X2) -- it is a
-#' downstream consequence of (X1, X2, Y), not a cause of Y -- so the oracle
-#' CP predictor for the MC family, \eqn{E[Y \mid X_1, X_2, M_{X1} = 0]},
-#' coincides with the MU oracle predictor, \eqn{E[Y \mid X_1, X_2]}. This
-#' returns that shared oracle relationship expressed as a coefficient
-#' vector, with an explicit (zero) \code{"MX1"} term added for the MC
-#' family so that \code{predict_linear()} builds the same
-#' \code{~ X1 + X2 + MX1} design used by the fitted MC coefficient.
+#' Returns a \code{function(newdata)} giving the true Bayes-optimal
+#' prediction for the requested family, to be plugged into
+#' \code{compute_rp_pp()} / \code{compute_ccval()} in place of a fitted
+#' coefficient vector.
+#'
+#' For \code{family = "mu"} this is exactly \eqn{E[Y \mid X_1, X_2]}, a
+#' linear function of \code{theta$Y$beta} under the Gaussian model --
+#' correct under any mechanism (the MU-OP-Bayes predictor never depends on
+#' MX1 at all).
+#'
+#' For \code{family = "mc"} this is \eqn{E[Y \mid X_1, X_2, M_{X1} = 0]},
+#' \emph{not} \eqn{E[Y \mid X_1, X_2]}. An earlier version of this function
+#' returned the MU coefficients with an explicit zero \code{"MX1"} term for
+#' MC, reasoning that MX1 has no direct causal effect on Y given (X1, X2).
+#' That causal claim is true but does not license the statistical
+#' conclusion drawn from it: MX1 is a downstream, collider-type consequence
+#' of (X1, X2, Y) in this DGP (its own logistic model can depend on Y), so
+#' conditioning on \eqn{M_{X1}=0} reweights the conditional law of Y given
+#' (X1, X2) by \eqn{\Pr(M_{X1}=0 \mid X_1,X_2,Y)} whenever that probability
+#' depends on Y (\code{beta_phi[["Y"]] != 0}, i.e.\ NICO fails -- scenarios
+#' M4/M5 in the running example) -- a pure selection effect, no causal
+#' pathway required. The result is generally \emph{not} even a linear
+#' function of (X1, X2) once this happens (it is a logistic-tilted Gaussian
+#' integral), so no fixed coefficient vector can represent it exactly; a
+#' zero MX1 coefficient is only correct when NICO already holds (M1/M2/M3
+#' here), where the tilting factor is constant in Y and the reweighting is
+#' vacuous. This version instead evaluates the true conditional expectation
+#' pointwise via the same importance-weighted Monte Carlo integration
+#' \code{compute_theoretical_risks()} uses for its own \code{risk_mc_cp}
+#' target (\code{ey_given_x1x2_m()}, from \code{validation_functions.R}),
+#' so the empirical "optimal" MC branch is checked against a genuinely
+#' Bayes-optimal predictor rather than the MU predictor with the MX1 term
+#' hardcoded to zero. It reduces to the same linear MU-form prediction
+#' automatically whenever NICO holds, since the importance weight becomes
+#' constant in Y in that case and the weighted mean collapses to the plain
+#' Gaussian conditional mean -- no special-casing needed.
 #'
 #' @param theta List. Data-generating model parameters (as in config.R).
+#' @param beta_phi List. Missingness-model parameters for the scenario at
+#'   hand (as in \code{simulation_object[["beta_phi"]]}). Only used for
+#'   \code{family = "mc"}.
 #' @param family One of \code{"mu"} or \code{"mc"}.
+#' @param B,chunk_size Monte Carlo integration parameters forwarded to
+#'   \code{ey_given_x1x2_m()} when \code{family = "mc"}; unused for
+#'   \code{"mu"} (exact, no integration needed). Larger \code{B} costs
+#'   proportionally more, since (unlike a fixed coefficient vector) this
+#'   re-integrates for every row of every call -- including once per
+#'   imputation in \code{compute_rp_pp()}'s RP/PP pooling, so this is the
+#'   dominant new cost of fixing the family = "mc" branch. Match
+#'   \code{B_theoretical} if you want the empirical "optimal" MC branch and
+#'   \code{compute_theoretical_risks()}'s \code{risk_mc_cp} target to be
+#'   computed at comparable Monte Carlo precision.
 #'
-#' @return A named numeric vector of coefficients, in the same form as
-#'   \code{fit_linear_mi()}'s return value.
-oracle_coef_for_family = function(theta, family = c("mu", "mc")) {
+#' @return A function taking a data frame with columns \code{X1}, \code{X2}
+#'   (and, for \code{"mu"}, ignoring any others) and returning a numeric
+#'   vector of predictions.
+oracle_predict_fn_for_family = function(theta, beta_phi = NULL,
+                                        family = c("mu", "mc"),
+                                        B = 2000, chunk_size = 5000) {
   family = match.arg(family)
-  coef = theta[["Y"]][["beta"]]
-  if (family == "mc") coef = c(coef, "MX1" = 0)
-  coef
+  if (family == "mu") {
+    coef = theta[["Y"]][["beta"]]
+    return(function(newdata) predict_linear(coef, newdata))
+  }
+
+  if (is.null(beta_phi)) {
+    stop("oracle_predict_fn_for_family(): `beta_phi` is required for family = \"mc\".",
+        call. = FALSE)
+  }
+
+  function(newdata) {
+    ey_given_x1x2_m(newdata[["X1"]], newdata[["X2"]], m = 0,
+                    theta = theta, beta_phi = beta_phi,
+                    B = B, chunk_size = chunk_size)
+  }
 }
 
 #' Build multiply-imputed copies of a test set for validation
@@ -184,11 +255,12 @@ oracle_coef_for_family = function(theta, family = c("mu", "mc")) {
 #' @param theta,beta_phi Required when \code{method = "optimal"}: the
 #'   data-generating and missingness model parameters used by the
 #'   \code{sample_x1_*()} samplers in \code{validation_functions.R}.
-#' @param K,B_inner SIR parameters forwarded to \code{sample_x1_mc()} /
-#'   \code{sample_x1_mc_y()} when \code{method = "optimal"} and
-#'   \code{family = "mc"} (\code{B_inner} is unused, and not forwarded, when
-#'   \code{include_outcome = TRUE}, since \code{sample_x1_mc_y()} does not
-#'   need to integrate Y out -- it is already observed).
+#' @param K,B_inner SIR parameters forwarded to \code{sample_x1_mc()} when
+#'   \code{method = "optimal"}, \code{family = "mc"} and
+#'   \code{include_outcome = FALSE}. Unused when \code{include_outcome =
+#'   TRUE}: the with-outcome "optimal" sampler (\code{sample_x1_mu_y()} /
+#'   \code{sample_x1_mc_y()}, identical for both families) is closed-form,
+#'   no SIR involved -- see \code{sample_x1_mc_y()}'s documentation.
 #' @param verbose Logical. Print progress via \code{log_step()}.
 #'
 #' @return A list of \code{m} completed data frames (copies of
@@ -249,16 +321,18 @@ build_imputed_test_sets = function(data_test, m,
     } else {
       X2_miss = data_test[["X2"]][idx_miss]
       Y_miss  = data_test[["Y"]][idx_miss]
-      if (family == "mu") {
-        draws = sample_x1_mu_y(X2 = X2_miss, Y = Y_miss, m = m, theta = theta)
-        ess_summary = NULL
+      ## Both families draw from the same true, unconditional P(X1 | X2, Y)
+      ## here -- no SIR, no beta_phi needed for either. See sample_x1_mc_y()'s
+      ## documentation for why an MC-specific, M=0-conditional sampler was
+      ## wrong for this (with-outcome, risk-pooling) case even though
+      ## sample_x1_mc() is correctly M=0-conditional for the without-outcome
+      ## case just above.
+      draws = if (family == "mu") {
+        sample_x1_mu_y(X2 = X2_miss, Y = Y_miss, m = m, theta = theta)
       } else {
-        sir = sample_x1_mc_y(X2 = X2_miss, Y = Y_miss, m = m,
-                             theta = theta, beta_phi = beta_phi,
-                             K = K, verbose = verbose)
-        draws = sir$draws
-        ess_summary = sir$ess_frac
+        sample_x1_mc_y(X2 = X2_miss, Y = Y_miss, m = m, theta = theta)
       }
+      ess_summary = NULL
     }
 
     imputed_list = lapply(seq_len(m), function(i) {
@@ -283,8 +357,11 @@ build_imputed_test_sets = function(data_test, m,
 
 #' Risk-pooling and predictions-pooling MSE across multiply-imputed test sets
 #'
-#' @param coef Named coefficient vector, as returned by
-#'   \code{fit_linear_mi()} or \code{oracle_coef_for_family()}.
+#' @param predict_fn A function taking a data frame and returning a numeric
+#'   vector of predictions, e.g.\ \code{function(dat) predict_linear(coef, dat)}
+#'   wrapping a fitted coefficient vector (\code{fit_linear_mi()}'s return
+#'   value), or \code{oracle_predict_fn_for_family()}'s return value for the
+#'   Bayes-optimal branch.
 #' @param imputed_list List of \code{m} completed test-set data frames, as
 #'   returned by \code{build_imputed_test_sets()}.
 #' @param y_true Numeric vector of true outcome values, aligned with the
@@ -293,8 +370,8 @@ build_imputed_test_sets = function(data_test, m,
 #' @return A list with elements \code{rp} (risk-pooling MSE: mean of the
 #'   per-imputation MSEs) and \code{pp} (predictions-pooling MSE: MSE of
 #'   the across-imputation-averaged predictions).
-compute_rp_pp = function(coef, imputed_list, y_true) {
-  preds = sapply(imputed_list, function(dat) predict_linear(coef, dat))
+compute_rp_pp = function(predict_fn, imputed_list, y_true) {
+  preds = sapply(imputed_list, function(dat) predict_fn(dat))
   mse_vec = apply(preds, 2, function(p) compute_msd(y_true, p))
   rp = mean(mse_vec)
   pp = compute_msd(y_true, rowMeans(preds))
@@ -303,16 +380,16 @@ compute_rp_pp = function(coef, imputed_list, y_true) {
 
 #' Complete-case validation MSE
 #'
-#' @param coef Named coefficient vector, as returned by
-#'   \code{fit_linear_mi()} or \code{oracle_coef_for_family()}.
+#' @param predict_fn A function taking a data frame and returning a numeric
+#'   vector of predictions -- see \code{compute_rp_pp()}.
 #' @param data_test Data frame with columns X1, X2, Y, MX1.
 #'
-#' @return Numeric scalar, the MSE of \code{predict_linear(coef, .)}
-#'   evaluated on the \code{MX1 == 0} subset of \code{data_test}.
-compute_ccval = function(coef, data_test) {
+#' @return Numeric scalar, the MSE of \code{predict_fn(.)} evaluated on the
+#'   \code{MX1 == 0} subset of \code{data_test}.
+compute_ccval = function(predict_fn, data_test) {
   idx0 = data_test[["MX1"]] == 0
   data_cc = data_test[idx0, , drop = FALSE]
-  pred = predict_linear(coef, data_cc)
+  pred = predict_fn(data_cc)
   compute_msd(data_cc[["Y"]], pred)
 }
 
@@ -335,9 +412,38 @@ compute_ccval = function(coef, data_test) {
 #'   \code{metadata}.
 #' @param family One of \code{"mu"} or \code{"mc"}.
 #' @param theta List. Data-generating model parameters (as in config.R).
-#' @param m Integer. Number of imputations (both for training and for the
-#'   validation-time imputed test-set constructions). Defaults to 5.
-#' @param K,B_inner SIR parameters forwarded to the "optimal" MC sampler.
+#' @param m Integer. Number of multiple imputations used to \emph{train}
+#'   the prediction function (\code{fit_linear_mi()}'s Rubin's-rule
+#'   coefficient pooling). Defaults to 5.
+#' @param H Integer. Number of imputations drawn at \emph{validation} time
+#'   for the RP/PP imputed test-set constructions (\code{build_imputed_test_sets()}
+#'   / \code{compute_rp_pp()}). Defaults to \code{m} (the previous,
+#'   single-knob behaviour), but is a logically separate quantity: RP/PP's
+#'   own theoretical target risks are derived in the H -> Inf limit
+#'   (Master Lemma, chapter-11 derivations), so a finite H introduces a
+#'   strictly positive, Jensen-inequality excess risk of order 1/H on top
+#'   of any of the six named target risks -- present even for the fully
+#'   idealised oracle-prediction/optimal-imputation combination, since it
+#'   has nothing to do with mechanism or estimation quality. Pass a larger
+#'   H (independently of m) to shrink this finite-pooling artifact without
+#'   changing the number of training-time imputations.
+#' @param K,B_inner SIR parameters forwarded to the "optimal" MC sampler
+#'   (validation-time imputation, \code{build_imputed_test_sets()}).
+#' @param B_oracle,B_oracle_chunk_size Monte Carlo integration parameters
+#'   forwarded to \code{oracle_predict_fn_for_family()}'s \code{family =
+#'   "mc"} branch (the Bayes-optimal MC-CP prediction itself, \emph{not}
+#'   the validation-time imputation -- a separate integration from
+#'   \code{K}/\code{B_inner}). Unused for \code{family = "mu"}. Match
+#'   \code{B_theoretical} (the driver script's Monte Carlo precision for
+#'   \code{compute_theoretical_risks()}) if you want the empirical
+#'   "optimal" MC branch compared at the same precision as the theoretical
+#'   target it's meant to reconstruct. Note this integration re-runs once
+#'   per call to the returned prediction function -- including once per
+#'   imputation inside \code{compute_rp_pp()} -- so it is noticeably more
+#'   expensive than the previous (buggy) fixed-coefficient oracle; see
+#'   \code{oracle_predict_fn_for_family()}'s documentation for why a fixed
+#'   coefficient vector cannot represent this target exactly in the first
+#'   place (M4/M5, where NICO fails).
 #' @param include_outcome_variant Logical. If \code{TRUE}, also compute the
 #'   four "_withY" risk-/predictions-pooling columns (illustrative-only
 #'   validation-time imputation that is also given the true outcome Y, using
@@ -354,7 +460,8 @@ compute_ccval = function(coef, data_test) {
 #'   \code{predictionsPooling_optimal_withY}, \code{riskPooling_estimated_withY},
 #'   \code{predictionsPooling_estimated_withY}.
 validate_one_point = function(simulation_object, family = c("mu", "mc"),
-                              theta, m = 5, K = 1000, B_inner = 200,
+                              theta, m = 5, H = m, K = 1000, B_inner = 200,
+                              B_oracle = 2000, B_oracle_chunk_size = 5000,
                               include_outcome_variant = FALSE,
                               verbose = FALSE) {
   family = match.arg(family)
@@ -376,32 +483,34 @@ validate_one_point = function(simulation_object, family = c("mu", "mc"),
     exclude_train = "MX1"
   }
 
-  oracle_coef = oracle_coef_for_family(theta, family)
+  oracle_predict_fn = oracle_predict_fn_for_family(theta, beta_phi = beta_phi, family = family,
+                                                   B = B_oracle, chunk_size = B_oracle_chunk_size)
 
   if (verbose) {
-    log_step(sprintf("validate_one_point: %s | %s | target %.3f | fitting via MI (m = %d)",
-                     scenario, family, target, m), indent = 1)
+    log_step(sprintf("validate_one_point: %s | %s | target %.3f | fitting via MI (m = %d), validation pooling H = %d",
+                     scenario, family, target, m, H), indent = 1)
   }
 
   coef_fitted = fit_linear_mi(data_train, formula = formula, variables = variables_train,
                               exclude_from_predictor_matrix = exclude_train, m = m)
+  fitted_predict_fn = function(newdata) predict_linear(coef_fitted, newdata)
 
   ## --- ordinary (Y-free) validation-time imputation ---
   imputed_estimated = build_imputed_test_sets(
-    data_test, m = m, method = "estimated", family = family, verbose = verbose
+    data_test, m = H, method = "estimated", family = family, verbose = verbose
   )
   imputed_optimal = build_imputed_test_sets(
-    data_test, m = m, method = "optimal", family = family,
+    data_test, m = H, method = "optimal", family = family,
     theta = theta, beta_phi = beta_phi, K = K, B_inner = B_inner, verbose = verbose
   )
 
   ## Fitted prediction / estimated imputation: fully realistic.
-  rp_pp_estimated = compute_rp_pp(coef_fitted, imputed_estimated, y_true)
+  rp_pp_estimated = compute_rp_pp(fitted_predict_fn, imputed_estimated, y_true)
   ## Oracle prediction / optimal imputation: fully idealised.
-  rp_pp_optimal   = compute_rp_pp(oracle_coef, imputed_optimal, y_true)
+  rp_pp_optimal   = compute_rp_pp(oracle_predict_fn, imputed_optimal, y_true)
 
-  ccval_fitted  = compute_ccval(coef_fitted, data_test)
-  ccval_optimal = compute_ccval(oracle_coef, data_test)
+  ccval_fitted  = compute_ccval(fitted_predict_fn, data_test)
+  ccval_optimal = compute_ccval(oracle_predict_fn, data_test)
 
   if (verbose) {
     log_step(sprintf(
@@ -428,11 +537,11 @@ validate_one_point = function(simulation_object, family = c("mu", "mc"),
 
   if (include_outcome_variant) {
     imputed_estimated_withY = build_imputed_test_sets(
-      data_test, m = m, method = "estimated", family = family,
+      data_test, m = H, method = "estimated", family = family,
       include_outcome = TRUE, verbose = verbose
     )
     imputed_optimal_withY = build_imputed_test_sets(
-      data_test, m = m, method = "optimal", family = family,
+      data_test, m = H, method = "optimal", family = family,
       include_outcome = TRUE,
       theta = theta, beta_phi = beta_phi, K = K, B_inner = B_inner, verbose = verbose
     )
@@ -441,8 +550,8 @@ validate_one_point = function(simulation_object, family = c("mu", "mc"),
     ## comment: fitted prediction / estimated (mice-fit) with-Y imputation is
     ## the realistic combination; oracle prediction / optimal (true-
     ## distribution) with-Y imputation is the idealised one.
-    rp_pp_estimated_withY = compute_rp_pp(coef_fitted, imputed_estimated_withY, y_true)
-    rp_pp_optimal_withY   = compute_rp_pp(oracle_coef, imputed_optimal_withY, y_true)
+    rp_pp_estimated_withY = compute_rp_pp(fitted_predict_fn, imputed_estimated_withY, y_true)
+    rp_pp_optimal_withY   = compute_rp_pp(oracle_predict_fn, imputed_optimal_withY, y_true)
 
     result$riskPooling_optimal_withY          = rp_pp_optimal_withY$rp
     result$predictionsPooling_optimal_withY   = rp_pp_optimal_withY$pp

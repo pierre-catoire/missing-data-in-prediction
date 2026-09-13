@@ -110,27 +110,20 @@
 \def\scenario{M1}
 \input{figure_scenario_validation_consistency.tex}
 
-\ifx\variant\withyword
-  \addlegendentry{Risk pooling (oracle prediction, optimal imputation, outcome included)}
-  \addlegendentry{Predictions pooling (oracle prediction, optimal imputation, outcome included)}
-  \addlegendentry{Risk pooling (fitted prediction, estimated imputation, outcome included)}
-  \addlegendentry{Predictions pooling (fitted prediction, estimated imputation, outcome included)}
-  \addlegendentry{Complete-case validation (fitted model)}
-  \addlegendentry{Complete-case validation (oracle model)}
-  \addlegendentry{Theoretical OP risk}
-  \addlegendentry{Theoretical CP risk}
-  \addlegendentry{Theoretical full risk}
-\else
-  \addlegendentry{Risk pooling (oracle prediction, optimal imputation)}
-  \addlegendentry{Predictions pooling (oracle prediction, optimal imputation)}
-  \addlegendentry{Risk pooling (fitted prediction, estimated imputation)}
-  \addlegendentry{Predictions pooling (fitted prediction, estimated imputation)}
-  \addlegendentry{Complete-case validation (fitted model)}
-  \addlegendentry{Complete-case validation (oracle model)}
-  \addlegendentry{Theoretical OP risk}
-  \addlegendentry{Theoretical CP risk}
-  \addlegendentry{Theoretical full risk}
-\fi
+% NOTE: previously branched on \variant to append ", outcome included" to
+% the first four entries for the "withy" figures. Dropped -- the caption in
+% the LaTeX body already states that outcome-inclusive imputation is used,
+% and the longer strings were wide enough to spill the legend over
+% Scenario 1's plot. Both variants now share the same, shorter entries.
+\addlegendentry{Risk pooling (oracle prediction, optimal imputation)}
+\addlegendentry{Predictions pooling (oracle prediction, optimal imputation)}
+\addlegendentry{Risk pooling (fitted prediction, estimated imputation)}
+\addlegendentry{Predictions pooling (fitted prediction, estimated imputation)}
+\addlegendentry{Complete-case validation (fitted model)}
+\addlegendentry{Complete-case validation (oracle model)}
+\addlegendentry{Theoretical OP risk}
+\addlegendentry{Theoretical CP risk}
+\addlegendentry{Theoretical full risk}
 
 % =================================================
 % Scenario 2

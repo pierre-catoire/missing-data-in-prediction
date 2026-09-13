@@ -422,12 +422,23 @@ sample_x1_mc = function(X2, m, theta, beta_phi,
 #
 # sample_x1_mu_y(): draws directly from that closed-form P(X1 | X2, Y).
 #
-# sample_x1_mc_y(): draws from P(X1 | X2, Y, M = 0) via SIR, using the
-#   closed-form P(X1 | X2, Y) as the proposal and the (now fully known,
-#   since Y is given) likelihood P(M = 0 | X1, X2, Y) as the importance
-#   weight. Unlike sample_x1_mc(), no inner Monte Carlo loop over Y is
-#   needed -- Y is observed here, not integrated out -- so this is both
-#   simpler and cheaper.
+# sample_x1_mc_y(): corrects an earlier version of this function, which drew
+#   from P(X1 | X2, Y, M = 0) via SIR (the complete-case-conditional law --
+#   using the closed-form P(X1 | X2, Y) as the proposal and the likelihood
+#   P(M = 0 | X1, X2, Y) as the importance weight). That was the wrong
+#   target for RP-with-outcome under either family: the with-outcome
+#   risk-pooling proposition (Part C / Prop 11.6 of the chapter-11
+#   derivations; requires MARXYO) needs draws from the *unconditional*
+#   P(X1 | X2, Y), not the M=0-conditional law -- these coincide only under
+#   condition (dagger), i.e. only for scenarios where MAR-X also holds
+#   (M1/M2), which is why the bug was invisible there and only showed up as
+#   a spurious gap under M5 (MARXYO holds, MAR-X/(dagger) fails). The
+#   correct law is exactly sample_x1_mu_y()'s: P(X1 | X2, Y) has a closed
+#   form (see x1_given_x2y_moments()) and needs no SIR, no beta_phi, and no
+#   candidate count. Kept as a separate function (rather than having
+#   build_imputed_test_sets() call sample_x1_mu_y() directly for both
+#   families) only so that call site can keep dispatching on `family`
+#   without needing to know the two samplers are now identical.
 
 #' Closed-form conditional moments of X1 given (X2, Y) under theta
 #'
@@ -480,93 +491,26 @@ sample_x1_mu_y = function(X2, Y, m, theta) {
         nrow = n, ncol = m)
 }
 
-#' Draw multiply-imputed values of X1 from the true P(X1 | X2, Y, M = 0) via SIR
+#' Draw multiply-imputed values of X1 from the true, unconditional P(X1 | X2, Y)
 #'
-#' Same SIR logic as \code{sample_x1_mc()}, but conditioning on the (given,
-#' known) outcome Y instead of marginalising over it: the proposal is the
-#' closed-form Gaussian \eqn{P(X_1 \mid X_2, Y)} (see
-#' \code{x1_given_x2y_moments()}), and each candidate's importance weight is
-#' exactly \eqn{P(M = 0 \mid X_1, X_2, Y)} -- no inner Monte Carlo loop over
-#' Y is required since Y is already known for every unit.
+#' See the section-header comment above for why this -- and not the
+#' M=0-conditional P(X1 | X2, Y, M = 0) an earlier version of this function
+#' targeted via SIR -- is the correct sampler for the with-outcome
+#' risk-pooling proposition (Part C / Prop 11.6). Delegates entirely to
+#' \code{sample_x1_mu_y()}: the two families draw from exactly the same law
+#' here, since neither the "optimal" MU nor MC with-outcome branch depends
+#' on the missingness mechanism at all (\code{beta_phi} is not even a
+#' parameter any more).
 #'
 #' @param X2,Y Numeric vectors. Covariate/outcome values of the units to
 #'   draw for.
 #' @param m Integer. Number of imputed values to draw per unit.
 #' @param theta List. Data-generating model parameters (as in config.R).
-#' @param beta_phi Numeric vector. Coefficients of the logistic missingness
-#'   model for M, including the intercept.
-#' @param K Integer. Number of candidate X1 values (SIR particles) drawn per
-#'   unit. Defaults to 1000.
-#' @param chunk_size Integer. Number of units processed per chunk, to bound
-#'   the (units x K) intermediate matrices' memory use. Defaults to 1000.
-#' @param min_ess Numeric in (0,1]. Minimum acceptable per-unit effective
-#'   sample size fraction (ESS / K); see \code{sample_x1_mc()}. Defaults to
-#'   0.01.
-#' @param verbose Logical. If TRUE, prints a one-line progress/ESS summary
-#'   per chunk via \code{log_step()}. Defaults to FALSE.
 #'
-#' @return A list with elements \code{draws} (n x m numeric matrix) and
-#'   \code{ess_frac} (numeric vector of length n), as in \code{sample_x1_mc()}.
-sample_x1_mc_y = function(X2, Y, m, theta, beta_phi,
-                          K = 1000, chunk_size = 1000,
-                          min_ess = 0.01, verbose = FALSE) {
-  mom = x1_given_x2y_moments(X2, Y, theta)
-  n = length(X2)
-
-  ## Shared standard-normal offsets: candidate_{i,k} = mean[i] + sd * z[k].
-  ## (sd is identical across units, so the same z can be reused everywhere.)
-  z = rnorm(K)
-
-  draws    = matrix(NA_real_, nrow = n, ncol = m)
-  ess_frac = numeric(n)
-
-  n_chunks = ceiling(n / chunk_size)
-  chunk_i  = 0
-
-  for (start in seq(1, n, by = chunk_size)) {
-    chunk_i = chunk_i + 1
-    idx = start:min(start + chunk_size - 1, n)
-    nb = length(idx)
-
-    ## (nb x K) grid of candidates for this chunk
-    x1_candidates = outer(mom$mean[idx], mom$sd * z, "+")
-
-    lp = beta_phi[["(Intercept)"]] +
-      beta_phi[["X1"]] * x1_candidates +
-      beta_phi[["X2"]] * X2[idx] +
-      beta_phi[["Y"]]  * Y[idx]
-    weight = 1 - plogis(lp)
-
-    row_sums = rowSums(weight)
-    if (any(row_sums <= 0)) {
-      stop("sample_x1_mc_y(): degenerate importance weights (all-zero) for ",
-           "at least one unit; try increasing K.", call. = FALSE)
-    }
-    weight_norm = weight / row_sums
-
-    ess_frac_chunk = 1 / (K * rowSums(weight_norm^2))
-    ess_frac[idx] = ess_frac_chunk
-
-    for (i in seq_len(nb)) {
-      draws[idx[i], ] = sample(x1_candidates[i, ], size = m, replace = TRUE,
-                               prob = weight_norm[i, ])
-    }
-
-    if (verbose) {
-      log_step(sprintf(
-        "sample_x1_mc_y: chunk %d/%d (%d units) | mean ESS frac %.3f | min ESS frac %.3f",
-        chunk_i, n_chunks, nb, mean(ess_frac_chunk), min(ess_frac_chunk)
-      ), indent = 2)
-    }
-  }
-
-  n_low_ess = sum(ess_frac < min_ess)
-  if (n_low_ess > 0) {
-    warning(sprintf(
-      "sample_x1_mc_y(): %d/%d units have an effective sample size fraction below %.3f (weight degeneracy); consider increasing K.",
-      n_low_ess, n, min_ess
-    ), call. = FALSE)
-  }
-
-  list(draws = draws, ess_frac = ess_frac)
+#' @return An n x m numeric matrix of draws (n = \code{length(X2)}), exactly
+#'   as \code{sample_x1_mu_y()} returns -- no longer a list with
+#'   \code{draws}/\code{ess_frac}, since there is no SIR step to report an
+#'   ESS for.
+sample_x1_mc_y = function(X2, Y, m, theta) {
+  sample_x1_mu_y(X2 = X2, Y = Y, m = m, theta = theta)
 }

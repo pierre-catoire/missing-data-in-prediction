@@ -607,15 +607,35 @@ train_mimi = function(dataset, m = 5, method = "norm") {
   
   for(impSet in 1:m){
     if(any(idx1)){
-      # BUGFIX: this used to fit X1 ~ X2 on complete(imp,impSet)[idx1,], i.e.
-      # on the rows where X1 WAS missing at training, using mice's own
-      # imputed values as if they were data. That taught impModel mice's
-      # imputation model back to itself instead of the genuine X1-X2
-      # relationship. impModel is meant to impute X1 for *new* data at
-      # prediction time, so it must be fit on the rows where X1 was actually
-      # observed at training (!idx1), using their real X1 values.
+      # BUGFIX (reverts a previous, incorrect "BUGFIX" that used to be here):
+      # this line had been changed to fit X1 ~ X2 on complete(imp,impSet)[!idx1,]
+      # -- the rows where X1 was actually OBSERVED at training -- on the theory
+      # that fitting on complete(imp,impSet)[idx1,] (the rows where X1 was
+      # missing, using mice's own imputed values) was circular. That theory is
+      # wrong for this use case. impModel is meant to approximate the
+      # PATTERN-1-specific relationship E[X1 | X2, MX1=1], because that is the
+      # quantity plugged into predModel (fit with MX1 as a covariate) when
+      # predicting for new MX1=1 rows at deployment. Fitting on !idx1 instead
+      # estimates E[X1 | X2, MX1=0], which equals E[X1 | X2, MX1=1] only under
+      # MAR-X (X1 independent of MX1 given X2) -- a much stronger condition
+      # than the MARXYO-type assumption this training procedure otherwise
+      # relies on (see Prop. 6.6, "MC-Bayes consistency of MIMI"), and one that
+      # fails in this thesis's own M3-M5 running-example scenarios. Mice's
+      # imputed values for the idx1 rows are not circular here: they are
+      # posterior draws from a model of X1 given (X2, Y) learned from the
+      # genuinely-observed (!idx1) rows, evaluated at each idx1 row's own real
+      # X2 and Y -- exactly the information needed to recover the pattern-1
+      # conditional law of X1 given X2 once Y is integrated out. This was
+      # confirmed empirically (2026-09-13): refitting on idx1 instead of
+      # !idx1, on real M1/M3/M4/M5 grid points from output/main/raw/, brought
+      # MIMI's excess risk (vs the oracle MC-Bayes reference) on the MX1==1
+      # subgroup down from 20-50x worse than Pattern Submodels to matching PS
+      # almost exactly (e.g. M5 @ missingness=0.6: 0.492 -> 0.0085, vs PS's
+      # 0.0087). The docstring above ("fitted on observations with MX1 == 1")
+      # already described this correct behaviour; only the code had drifted
+      # from it.
       result[["impModel"]][[impSet]] = lm(formula("X1 ~ X2"),
-                                          data = complete(imp,impSet)[!idx1,])
+                                          data = complete(imp,impSet)[idx1,])
     }else{
       result[["impModel"]][[impSet]] = NULL
     }

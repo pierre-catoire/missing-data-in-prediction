@@ -80,7 +80,14 @@ if (run_mode == "quick") {
   B_theoretical  = 300    # MC draws per unit for the MC theoretical risks
   K_sir          = 300    # SIR candidates for sample_x1_mc()
   B_sir          = 100    # MC draws per SIR candidate
-  m_imputations  = 3      # number of multiple imputations
+  m_imputations  = 3      # number of multiple imputations, used to TRAIN the
+                          # prediction function (fit_linear_mi()'s Rubin's-
+                          # rule coefficient pooling)
+  H_pooling      = 3      # number of imputations drawn at VALIDATION time
+                          # for RP/PP (build_imputed_test_sets() /
+                          # compute_rp_pp()) -- a logically separate knob
+                          # from m_imputations; kept equal here for a fast
+                          # smoke test
 
 } else if (run_mode == "medium") {
   ## Calibrated from the ~8s/point observed for "full" settings on the
@@ -107,6 +114,8 @@ if (run_mode == "quick") {
   K_sir          = 250
   B_sir          = 50
   m_imputations  = 5
+  H_pooling      = 5      # kept equal to m_imputations for this reduced-
+                          # precision smoke-test mode
 
 } else if (run_mode == "full") {
   grid_frac      = 1
@@ -115,6 +124,17 @@ if (run_mode == "quick") {
   K_sir          = 1000
   B_sir          = 200
   m_imputations  = 5
+  ## Validation-time RP/PP pooling count, decoupled from m_imputations
+  ## (training-time MI): the six named target risks (Master Lemma,
+  ## chapter-11 derivations) are H -> Inf limits, so finite H introduces a
+  ## Jensen-inequality excess risk of order 1/H, present even in the fully
+  ## idealised oracle-prediction/optimal-imputation combination (confirmed
+  ## from the m=5 "full" run: PP-optimal overshoot MU-OP slightly and
+  ## uniformly across all five scenarios -- exactly this artifact, not a
+  ## mechanism-related inconsistency). Bumped to 50 (10x) to shrink it by
+  ## roughly the same factor without changing the number of training
+  ## imputations.
+  H_pooling      = 50
 
 } else {
   stop("`run_mode` must be one of \"quick\", \"medium\", \"full\".", call. = FALSE)
@@ -228,10 +248,38 @@ if (file.exists(theo_path) && file.exists(mu_path) && file.exists(mc_path)) {
 #' @return Invisibly returns a list with the three combined data frames
 #'   (\code{theoretical_df}, \code{mu_df}, \code{mc_df}), so the caller can
 #'   reuse them for the final figures without recomputing the rbind.
+#'
+#' Uses \code{base::rbind()} explicitly (rather than bare \code{rbind()})
+#' and guards the fully-empty case (no existing checkpoint AND no new rows
+#' this run) with an informative \code{stop()} instead of letting it fall
+#' through to \code{rbind()}/\code{do.call()}. Both precautions exist
+#' because \pkg{mice} loads a dependency that masks base \code{rbind}/
+#' \code{cbind} (visible at startup: "The following objects are masked from
+#' 'package:base': cbind, rbind"), and that masked version throws an opaque
+#' "subscript out of bounds" from \code{do.call(rbind, list())} rather than
+#' base R's \code{NULL} -- surfaced when every single grid point got
+#' skipped (e.g. \code{raw_dir} pointing at the wrong location) and there
+#' was nothing at all, existing or new, to combine.
+combine_rows = function(existing, new_list) {
+  new_df = if (length(new_list) > 0) do.call(base::rbind, new_list) else NULL
+  if (is.null(existing) && is.null(new_df)) {
+    stop(sprintf(paste0(
+      "save_progress(): nothing to save -- no existing checkpoint in %s and no new rows ",
+      "computed this run (every grid point was skipped). This almost always means `raw_dir` ",
+      "(currently \"%s\") does not contain the expected simulation_*.rds files where the ",
+      "script is looking for them -- check the log above for \"[skip] missing file\" lines ",
+      "and confirm `raw_dir` points at the right location before re-running."
+    ), out_raw, raw_dir), call. = FALSE)
+  }
+  if (is.null(existing)) return(new_df)
+  if (is.null(new_df)) return(existing)
+  base::rbind(existing, new_df)
+}
+
 save_progress = function() {
-  theoretical_df = rbind(existing_theoretical, do.call(rbind, theoretical_list))
-  mu_df = rbind(existing_mu, do.call(rbind, mu_list))
-  mc_df = rbind(existing_mc, do.call(rbind, mc_list))
+  theoretical_df = combine_rows(existing_theoretical, theoretical_list)
+  mu_df = combine_rows(existing_mu, mu_list)
+  mc_df = combine_rows(existing_mc, mc_list)
 
   saveRDS(theoretical_df, theo_path)
   saveRDS(mu_df, mu_path)
@@ -258,9 +306,9 @@ save_progress = function() {
 ## =============================================================================
 
 log_step(sprintf(
-  "Starting validation analysis | run_mode = %s | %d scenarios x %d grid points (of %d, %d already done) | m = %d | checkpoint every %d points",
+  "Starting validation analysis | run_mode = %s | %d scenarios x %d grid points (of %d, %d already done) | m = %d, H = %d | checkpoint every %d points",
   run_mode, length(missingness_scenarios), length(selected_grid), length(missingness_grid),
-  length(done_keys), m_imputations, checkpoint_every
+  length(done_keys), m_imputations, H_pooling, checkpoint_every
 ))
 
 theoretical_list = list()
@@ -304,14 +352,16 @@ for (scenario in missingness_scenarios) {
 
     ## --- empirical validation: MU ---
     mu_row = validate_one_point(simulation_object, family = "mu", theta = theta,
-                                m = m_imputations, K = K_sir, B_inner = B_sir,
+                                m = m_imputations, H = H_pooling, K = K_sir, B_inner = B_sir,
+                                B_oracle = B_theoretical,
                                 include_outcome_variant = include_outcome_variant,
                                 verbose = FALSE)
     mu_list[[length(mu_list) + 1]] = mu_row
 
     ## --- empirical validation: MC ---
     mc_row = validate_one_point(simulation_object, family = "mc", theta = theta,
-                                m = m_imputations, K = K_sir, B_inner = B_sir,
+                                m = m_imputations, H = H_pooling, K = K_sir, B_inner = B_sir,
+                                B_oracle = B_theoretical,
                                 include_outcome_variant = include_outcome_variant,
                                 verbose = FALSE)
     mc_list[[length(mc_list) + 1]] = mc_row
