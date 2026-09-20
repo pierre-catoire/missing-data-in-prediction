@@ -420,25 +420,33 @@ sample_x1_mc = function(X2, m, theta, beta_phi,
 #   Y = beta0 + beta1*X1 + beta2*X2 + N(0, sdY^2)), so X1 | X2, Y has a
 #   closed-form Gaussian conditional -- no SIR needed for this piece.
 #
-# sample_x1_mu_y(): draws directly from that closed-form P(X1 | X2, Y).
+# sample_x1_mu_y(): draws directly from that closed-form P(X1 | X2, Y). The
+#   MU family's oracle/CP predictor has no M-dependence at all, so there is
+#   no M = 0 conditioning to add here -- this sampler is unaffected by the
+#   design change described next.
 #
-# sample_x1_mc_y(): corrects an earlier version of this function, which drew
-#   from P(X1 | X2, Y, M = 0) via SIR (the complete-case-conditional law --
-#   using the closed-form P(X1 | X2, Y) as the proposal and the likelihood
-#   P(M = 0 | X1, X2, Y) as the importance weight). That was the wrong
-#   target for RP-with-outcome under either family: the with-outcome
+# sample_x1_mc_y(): draws from P(X1 | X2, Y, M = 0), matching the
+#   without-outcome sample_x1_mc()'s M = 0 conditioning (the imputation
+#   target the MC family's oracle predictor is evaluated against, m forced
+#   to 0, at every validation point). This has no closed form -- Y is fixed
+#   per unit, so unlike sample_x1_mc() (which must Monte-Carlo-integrate Y
+#   out of the missingness likelihood) the importance weight
+#   P(M = 0 | X1, X2, Y) is a single deterministic plogis() evaluation per
+#   candidate; only the X1-candidates need sampling, from the closed-form
+#   proposal P(X1 | X2, Y) (x1_given_x2y_moments()), per unit.
+#
+#   NOTE: an earlier version of this function used exactly this SIR
+#   construction, and was later replaced by a delegation to sample_x1_mu_y()
+#   (the unconditional P(X1 | X2, Y)) on the grounds that the with-outcome
 #   risk-pooling proposition (Part C / Prop 11.6 of the chapter-11
-#   derivations; requires MARXYO) needs draws from the *unconditional*
-#   P(X1 | X2, Y), not the M=0-conditional law -- these coincide only under
-#   condition (dagger), i.e. only for scenarios where MAR-X also holds
-#   (M1/M2), which is why the bug was invisible there and only showed up as
-#   a spurious gap under M5 (MARXYO holds, MAR-X/(dagger) fails). The
-#   correct law is exactly sample_x1_mu_y()'s: P(X1 | X2, Y) has a closed
-#   form (see x1_given_x2y_moments()) and needs no SIR, no beta_phi, and no
-#   candidate count. Kept as a separate function (rather than having
-#   build_imputed_test_sets() call sample_x1_mu_y() directly for both
-#   families) only so that call site can keep dispatching on `family`
-#   without needing to know the two samplers are now identical.
+#   derivations, which requires MARXYO) is proved for the unconditional law,
+#   not the M = 0-conditional one. That remains true: restoring the
+#   M = 0-conditional sampler here means the MC-with-Y risk-pooling panel no
+#   longer tests Prop 11.6 as derived, and its limit under H -> Inf is not
+#   yet established in the thesis. This is a deliberate, requested design
+#   change, not a bug fix -- see the chapter-11 write-up for the
+#   corresponding open point before drawing conclusions from the MC-with-Y
+#   figures.
 
 #' Closed-form conditional moments of X1 given (X2, Y) under theta
 #'
@@ -491,26 +499,125 @@ sample_x1_mu_y = function(X2, Y, m, theta) {
         nrow = n, ncol = m)
 }
 
-#' Draw multiply-imputed values of X1 from the true, unconditional P(X1 | X2, Y)
+#' Draw multiply-imputed values of X1 from the true P(X1 | X2, Y, M = 0) via SIR
 #'
-#' See the section-header comment above for why this -- and not the
-#' M=0-conditional P(X1 | X2, Y, M = 0) an earlier version of this function
-#' targeted via SIR -- is the correct sampler for the with-outcome
-#' risk-pooling proposition (Part C / Prop 11.6). Delegates entirely to
-#' \code{sample_x1_mu_y()}: the two families draw from exactly the same law
-#' here, since neither the "optimal" MU nor MC with-outcome branch depends
-#' on the missingness mechanism at all (\code{beta_phi} is not even a
-#' parameter any more).
+#' Approximates the true (non-closed-form) posterior \eqn{P(X_1 \mid X_2, Y,
+#' M = 0)} by Sampling Importance Resampling, and draws \code{m} imputed
+#' values per unit from that approximation. See the section-header comment
+#' above for how this relates to \code{sample_x1_mu_y()} (the unconditional
+#' law) and to \code{sample_x1_mc()} (the without-outcome, M=0-conditional
+#' counterpart).
 #'
-#' @param X2,Y Numeric vectors. Covariate/outcome values of the units to
-#'   draw for.
+#' Algorithm, vectorised over units and chunked to bound memory use. Unlike
+#' \code{sample_x1_mc()}, Y is observed for every unit here, so the
+#' importance weight for each (unit, candidate) pair is a single
+#' deterministic evaluation of \eqn{P(M = 0 \mid X_1, X_2, Y)} -- no
+#' Monte-Carlo integration over Y is needed:
+#' \enumerate{
+#'   \item For each unit, draw \code{K} candidate X1 values from that unit's
+#'     own closed-form proposal \eqn{P(X_1 \mid X_2, Y)}
+#'     (\code{x1_given_x2y_moments()}) -- unlike \code{sample_x1_mc()}'s
+#'     candidates, these are unit-specific, not shared across units, since
+#'     the proposal now depends on (X2, Y).
+#'   \item Weight each (unit, candidate) pair by the likelihood
+#'     \eqn{P(M = 0 \mid X_1 = \text{candidate}, X_2, Y)} from the logistic
+#'     missingness model, evaluated directly (Y is known, so no averaging
+#'     over Y-noise draws is required).
+#'   \item Normalise the resulting (units x K) importance weights per unit
+#'     and resample \code{m} candidate indices per unit with probability
+#'     proportional to its weights.
+#' }
+#'
+#' @param X2,Y Numeric vectors of equal length. Covariate/outcome values of
+#'   the units to draw for (typically the units with missing X1 in a test
+#'   set).
 #' @param m Integer. Number of imputed values to draw per unit.
 #' @param theta List. Data-generating model parameters (as in config.R).
+#' @param beta_phi Numeric vector. Coefficients of the logistic missingness
+#'   model for M, including the intercept.
+#' @param K Integer. Number of candidate X1 values (SIR particles) drawn per
+#'   unit. Defaults to 1000.
+#' @param chunk_size Integer. Number of units processed per chunk, to bound
+#'   the (units x K) intermediate matrices' memory use. Defaults to 1000.
+#' @param min_ess Numeric in (0,1]. Minimum acceptable per-unit effective
+#'   sample size fraction (ESS / K); a warning is issued listing how many
+#'   units fall below this threshold, as a diagnostic for weight
+#'   degeneracy. Defaults to 0.01.
+#' @param verbose Logical. If TRUE, prints a one-line progress/ESS summary
+#'   per chunk via \code{log_step()}. Defaults to FALSE.
 #'
-#' @return An n x m numeric matrix of draws (n = \code{length(X2)}), exactly
-#'   as \code{sample_x1_mu_y()} returns -- no longer a list with
-#'   \code{draws}/\code{ess_frac}, since there is no SIR step to report an
-#'   ESS for.
-sample_x1_mc_y = function(X2, Y, m, theta) {
-  sample_x1_mu_y(X2 = X2, Y = Y, m = m, theta = theta)
+#' @return A list with elements:
+#' \describe{
+#'   \item{draws}{An n x m numeric matrix of imputed X1 draws (n =
+#'     \code{length(X2)}).}
+#'   \item{ess_frac}{Numeric vector of length n, the per-unit effective
+#'     sample size fraction (in (0,1]) achieved by the SIR approximation.}
+#' }
+sample_x1_mc_y = function(X2, Y, m, theta, beta_phi,
+                          K = 1000, chunk_size = 1000,
+                          min_ess = 0.01, verbose = FALSE) {
+  check_numeric_vector(X2, "X2")
+  check_numeric_vector(Y, "Y")
+  check_same_length(X2, Y, "X2", "Y")
+
+  n = length(X2)
+  mom = x1_given_x2y_moments(X2, Y, theta) # per-unit proposal mean, shared sd
+
+  draws    = matrix(NA_real_, nrow = n, ncol = m)
+  ess_frac = numeric(n)
+
+  n_chunks = ceiling(n / chunk_size)
+  chunk_i  = 0
+
+  for (start in seq(1, n, by = chunk_size)) {
+    chunk_i = chunk_i + 1
+    idx = start:min(start + chunk_size - 1, n)
+    nb = length(idx)
+
+    ## (nb x K) candidates, drawn from each unit's own closed-form proposal
+    ## P(X1 | X2, Y) -- mom$mean[idx] recycles correctly down each column
+    ## since the matrix is filled column-major in chunks of nb.
+    cand = matrix(rnorm(nb * K, mean = mom$mean[idx], sd = mom$sd),
+                  nrow = nb, ncol = K)
+
+    ## Deterministic importance weight per (unit, candidate): Y is known, so
+    ## no Y-noise averaging is needed (contrast sample_x1_mc()'s B-loop).
+    lp = beta_phi[["(Intercept)"]] +
+      beta_phi[["X1"]] * cand +
+      beta_phi[["X2"]] * X2[idx] +
+      beta_phi[["Y"]]  * Y[idx]
+    w = 1 - plogis(lp) # P(M = 0 | X1, X2, Y), (nb x K)
+
+    row_sums = rowSums(w)
+    if (any(row_sums <= 0)) {
+      stop("sample_x1_mc_y(): degenerate importance weights (all-zero) for ",
+           "at least one unit; try increasing K.", call. = FALSE)
+    }
+    w_norm = w / row_sums
+
+    ess_frac_chunk = 1 / (K * rowSums(w_norm^2))
+    ess_frac[idx] = ess_frac_chunk
+
+    for (i in seq_len(nb)) {
+      draws[idx[i], ] = sample(cand[i, ], size = m, replace = TRUE,
+                               prob = w_norm[i, ])
+    }
+
+    if (verbose) {
+      log_step(sprintf(
+        "sample_x1_mc_y: chunk %d/%d (%d units) | mean ESS frac %.3f | min ESS frac %.3f",
+        chunk_i, n_chunks, nb, mean(ess_frac_chunk), min(ess_frac_chunk)
+      ), indent = 2)
+    }
+  }
+
+  n_low_ess = sum(ess_frac < min_ess)
+  if (n_low_ess > 0) {
+    warning(sprintf(
+      "sample_x1_mc_y(): %d/%d units have an effective sample size fraction below %.3f (weight degeneracy); consider increasing K.",
+      n_low_ess, n, min_ess
+    ), call. = FALSE)
+  }
+
+  list(draws = draws, ess_frac = ess_frac)
 }

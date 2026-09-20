@@ -255,12 +255,17 @@ oracle_predict_fn_for_family = function(theta, beta_phi = NULL,
 #' @param theta,beta_phi Required when \code{method = "optimal"}: the
 #'   data-generating and missingness model parameters used by the
 #'   \code{sample_x1_*()} samplers in \code{validation_functions.R}.
-#' @param K,B_inner SIR parameters forwarded to \code{sample_x1_mc()} when
-#'   \code{method = "optimal"}, \code{family = "mc"} and
-#'   \code{include_outcome = FALSE}. Unused when \code{include_outcome =
-#'   TRUE}: the with-outcome "optimal" sampler (\code{sample_x1_mu_y()} /
-#'   \code{sample_x1_mc_y()}, identical for both families) is closed-form,
-#'   no SIR involved -- see \code{sample_x1_mc_y()}'s documentation.
+#' @param K SIR particle count forwarded to \code{sample_x1_mc()} (\code{method
+#'   = "optimal"}, \code{family = "mc"}, \code{include_outcome = FALSE}) and
+#'   to \code{sample_x1_mc_y()} (\code{method = "optimal"}, \code{family =
+#'   "mc"}, \code{include_outcome = TRUE}). Unused for \code{family = "mu"},
+#'   whose "optimal" sampler (\code{sample_x1_mu()} / \code{sample_x1_mu_y()})
+#'   is closed-form, no SIR involved.
+#' @param B_inner Monte Carlo draws forwarded to \code{sample_x1_mc()} (used
+#'   to integrate Y out of the missingness likelihood). Unused when
+#'   \code{include_outcome = TRUE}: \code{sample_x1_mc_y()} observes Y
+#'   directly, so its importance weights need no Y-integration -- see its
+#'   documentation.
 #' @param verbose Logical. Print progress via \code{log_step()}.
 #'
 #' @return A list of \code{m} completed data frames (copies of
@@ -321,18 +326,23 @@ build_imputed_test_sets = function(data_test, m,
     } else {
       X2_miss = data_test[["X2"]][idx_miss]
       Y_miss  = data_test[["Y"]][idx_miss]
-      ## Both families draw from the same true, unconditional P(X1 | X2, Y)
-      ## here -- no SIR, no beta_phi needed for either. See sample_x1_mc_y()'s
-      ## documentation for why an MC-specific, M=0-conditional sampler was
-      ## wrong for this (with-outcome, risk-pooling) case even though
-      ## sample_x1_mc() is correctly M=0-conditional for the without-outcome
-      ## case just above.
-      draws = if (family == "mu") {
-        sample_x1_mu_y(X2 = X2_miss, Y = Y_miss, m = m, theta = theta)
+      ## MU draws from the closed-form, unconditional P(X1 | X2, Y) (no
+      ## M-dependence in the MU family's predictor to begin with). MC draws
+      ## from the M=0-conditional P(X1 | X2, Y, M = 0) via SIR, mirroring
+      ## sample_x1_mc()'s M=0 conditioning in the without-outcome branch
+      ## above -- see sample_x1_mc_y()'s documentation for the design
+      ## rationale and its consequence for what the MC-with-Y risk-pooling
+      ## panel is theoretically shown to converge to.
+      if (family == "mu") {
+        draws = sample_x1_mu_y(X2 = X2_miss, Y = Y_miss, m = m, theta = theta)
+        ess_summary = NULL
       } else {
-        sample_x1_mc_y(X2 = X2_miss, Y = Y_miss, m = m, theta = theta)
+        sir = sample_x1_mc_y(X2 = X2_miss, Y = Y_miss, m = m,
+                             theta = theta, beta_phi = beta_phi,
+                             K = K, verbose = verbose)
+        draws = sir$draws
+        ess_summary = sir$ess_frac
       }
-      ess_summary = NULL
     }
 
     imputed_list = lapply(seq_len(m), function(i) {
