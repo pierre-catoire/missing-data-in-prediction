@@ -305,9 +305,9 @@ It is not designed as a general-purpose software package.
 
 ## Citation
 
-If you use this code, please cite the article and the archived version of this repository (see `CITATION.cff`):
+If you use this code, please cite the article and this repository (see `CITATION.cff`):
 
-> Catoire P, Genuer R, Proust-Lima C. Prediction with Missing Data: Target Probabilities and Missingness Mechanisms (software code). Zenodo, 2026. doi:10.5281/zenodo.19041344
+> Catoire P, Genuer R, Proust-Lima C. Prediction with Missing Data: Target Probabilities and Missingness Mechanisms (software code), version 2.0. 2026. https://github.com/pierre-catoire/missing-data-in-prediction
 
 ## License
 
