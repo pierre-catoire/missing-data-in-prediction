@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite it as below."
+title: "Prediction with Missing Data: Target Probabilities and Missingness Mechanisms (software code)"
+version: "2.0"
+date-released: "2026-11-26"
+license: MIT
+repository-code: "https://github.com/pierre-catoire/missing-data-in-prediction"
+doi: "10.5281/zenodo.19041344"
+authors:
+  - family-names: Catoire
+    given-names: Pierre
+  - family-names: Genuer
+    given-names: Robin
+  - family-names: Proust-Lima
+    given-names: Cécile

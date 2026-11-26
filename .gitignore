@@ -1,0 +1,22 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+sandbox/
+output/
+renv/
+NAMESPACE
+renv.lock
+.Rbuildignore
+.Rprofile
+.DS_Store
+Thumbs.db
+*.zip
+
+# Clinical dataset of the application: never commit (healthcare data protection)
+input/dataset_application.rda
+
+# LaTeX build products (figures are built into output/ by the Makefile)
+*.aux
+*.log
+latex/figures/*.pdf
